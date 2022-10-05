@@ -9,7 +9,8 @@ isChrome = input("is show chrome:")
 base.set(isChrome)
 
 while True:
-    comic.start(base, db)
+    base.sendTG('開始更新')
     actor.start(base, db)
-    base.time(60*60)
+    comic.start(base, db)
+    base.reciprocal(60*60)
 

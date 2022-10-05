@@ -16,15 +16,15 @@ def defaultChrome():
         f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
     s = Service('../chromedriver')
+    # s = Service('C:/Users/rd3/code/kevin/chromedriver.exe')
+    
     driver = webdriver.Chrome(service=s, options=chrome_options)  # 套用設定
     return driver
 
 
 def reciprocal(sec):
-    i = 0
     for x in range(sec):
-        i += 1
-        print("倒數:"+str(x-i)+"秒")
+        print("倒數:"+str(sec-x)+"秒")
         time.sleep(1)
 
 

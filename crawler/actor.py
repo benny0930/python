@@ -5,7 +5,6 @@ base = db = None
 
 def start(_base, _db):
     global base , db 
-    base.sendTG('開始更新影片')
     try:
         base = _base
         db = _db
@@ -13,17 +12,19 @@ def start(_base, _db):
         sql = "SELECT name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y'"
         results = db.select(sql)
         for row in results:
+            print("-----------")
             print(row)
             [name, url, website] = row
             missav(name, url)
     except Exception as e:
+        print(e)
         base.sendTG(str(e))
     
 
 def missav(name, url):
     driver = base.defaultChrome()
     driver.get(url)
-    base.time.sleep(1)
+    base.reciprocal(10)
     divList1 = driver.find_elements(
         By.XPATH, '//div[@class="thumbnail group"]/div[1]')
     divList2 = driver.find_elements(
@@ -48,4 +49,5 @@ def missav(name, url):
             db.insert("INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) ON DUPLICATE KEY UPDATE `updatetime`=UNIX_TIMESTAMP(NOW()) "
                       % (name, av_name, av_type, av_url))
         index += 1
+    print()
     driver.close()
