@@ -1,6 +1,7 @@
 import pymysql
 
-HOST = "192.168.56.56"
+# HOST = "192.168.56.56"
+HOST = "35.236.147.170"
 USER = 'homestead'
 PASSWORD = 'secret'
 DATABASE = 'homestead'
