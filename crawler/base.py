@@ -4,9 +4,12 @@ from selenium.webdriver.chrome.service import Service
 import time
 import requests
 isChrome = "N"
+
+
 def set(_isChrome):
     global isChrome
     isChrome = _isChrome
+
 
 def defaultChrome():
     chrome_options = Options()
@@ -15,9 +18,9 @@ def defaultChrome():
     chrome_options.add_argument(
         f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
-    s = Service('../chromedriver')
-    # s = Service('C:/Users/rd3/code/kevin/chromedriver.exe')
-    
+    # s = Service('../chromedriver')
+    s = Service('C:/Users/rd3/code/kevin/chromedriver.exe')
+
     driver = webdriver.Chrome(service=s, options=chrome_options)  # 套用設定
     return driver
 
@@ -46,5 +49,6 @@ def api_get(_url, _params):
 
 
 def sendTG(msg):
-    url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=-832492563&parse_mode=html&text=' + msg
-    api_get(url,{})
+    chat_id = '-815654986'
+    url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + chat_id +'&parse_mode=html&text=' + msg
+    api_get(url, {})

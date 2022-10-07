@@ -41,11 +41,7 @@ def missav(name, url):
             av_url = a.get_attribute('href').strip()
             av_name = a.get_attribute('innerHTML').strip()
             print("-----")
-            print(av_type)
-            print(av_url)
-            print(av_name)
-            print("-----")
-            print("")
+            print(av_type + ' / ' + av_url + ' / ' + av_name)
             db.insert("INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) ON DUPLICATE KEY UPDATE `updatetime`=UNIX_TIMESTAMP(NOW()) "
                       % (name, av_name, av_type, av_url))
         index += 1
