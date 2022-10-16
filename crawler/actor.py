@@ -24,7 +24,7 @@ def start(_base, _db):
 def missav(name, url):
     driver = base.defaultChrome()
     driver.get(url)
-    base.reciprocal(10)
+    base.reciprocal(1)
     divList1 = driver.find_elements(
         By.XPATH, '//div[@class="thumbnail group"]/div[1]')
     divList2 = driver.find_elements(

@@ -27,8 +27,8 @@ def defaultChrome():
 
 def reciprocal(sec):
     for x in range(sec):
-        print("倒數:"+str(sec-x)+"秒")
-        time.sleep(1)
+        print("倒數:"+str((sec-x)*10)+"秒")
+        time.sleep(10)
 
 
 def api_get(_url, _params):
@@ -50,5 +50,5 @@ def api_get(_url, _params):
 
 def sendTG(msg):
     chat_id = '-815654986'
-    url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + chat_id +'&parse_mode=html&text=' + msg
+    url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + chat_id + '&parse_mode=html&text=' + msg
     api_get(url, {})

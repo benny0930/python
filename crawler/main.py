@@ -1,17 +1,26 @@
 import random
 import base
 import db
-import comic
-import actor
+import gc
 
 
 # 更新演員及作品-------------------------------------------------------------------
 
-isChrome = input("is show chrome:")
-base.set(isChrome)
+isChrome = "N"
+isLoop = True
 
-while True:
+while isLoop:
+    isLoop = False
     base.sendTG('開始更新')
-    actor.start(base, db)
-    comic.start(base, db)
-    base.reciprocal(60*60+random.randrange(5, 15))
+    try:
+        import comic
+        import actor
+        actor.start(base, db)
+        comic.start(base, db)
+        del actor , comic
+    except Exception as e:
+        print(e)
+        base.sendTG(str(e))
+    # base.reciprocal(60*6+random.randrange(1, 6))
+    gc.collect()
+

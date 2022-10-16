@@ -27,7 +27,7 @@ def start(_base, _db):
 def baozimh(id, name, url, new_episode):
     driver = base.defaultChrome()
     driver.get(url)
-    base.reciprocal(10)
+    base.reciprocal(1)
     last_episode = driver.find_element(
         By.XPATH, '//div[@class="supporting-text mt-2"]/div[2]/span/a').text
     # print('id : ' + str(id))
@@ -44,7 +44,7 @@ def baozimh(id, name, url, new_episode):
 def cocomanga(id, name, url, new_episode):
     driver = base.defaultChrome()
     driver.get(url)
-    base.reciprocal(10)
+    base.reciprocal(1)
     last_episode = driver.find_element(
         By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[5]/a').text
     # print('id : ' + str(id))
