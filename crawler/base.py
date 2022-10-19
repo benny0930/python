@@ -49,6 +49,6 @@ def api_get(_url, _params):
 
 
 def sendTG(msg):
-    chat_id = '-815654986'
+    chat_id = '-758395812'
     url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + chat_id + '&parse_mode=html&text=' + msg
     api_get(url, {})
