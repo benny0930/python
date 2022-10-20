@@ -12,10 +12,14 @@ def start(_base, _db):
         sql = "SELECT name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y'"
         results = db.select(sql)
         for row in results:
-            print("-----------")
-            print(row)
-            [name, url, website] = row
-            missav(name, url)
+            try:
+                print("-----------")
+                print(row)
+                [name, url, website] = row
+                missav(name, url)
+            except Exception as e:
+                print(e)
+                base.sendTG(str(e))        
     except Exception as e:
         print(e)
         base.sendTG(str(e))
@@ -42,8 +46,13 @@ def missav(name, url):
             av_name = a.get_attribute('innerHTML').strip()
             print("-----")
             print(av_type + ' / ' + av_url + ' / ' + av_name)
-            db.insert("INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) ON DUPLICATE KEY UPDATE `updatetime`=UNIX_TIMESTAMP(NOW()) "
+            results = db.select(" SELECT id, name FROM fa_av_work WHERE `url` = '%s'" % (av_url))
+            if len(results) > 0 :
+                print('已存在')
+            else :
+                db.insert("INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))"
                       % (name, av_name, av_type, av_url))
+
         index += 1
     print()
     driver.close()
