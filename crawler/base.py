@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 import time
 import requests
+import os
 isChrome = "Y"
 
 
@@ -18,8 +19,11 @@ def defaultChrome():
     chrome_options.add_argument(
         f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
-    # s = Service('../chromedriver')
-    s = Service('C:/Users/rd3/code/kevin/chromedriver.exe')
+    if(os.path.exists('C:/Users/rd3/code/kevin/chromedriver.exe')):
+        s = Service('C:/Users/rd3/code/kevin/chromedriver.exe')
+    else:
+        s = Service('../chromedriver')
+    
 
     driver = webdriver.Chrome(service=s, options=chrome_options)  # 套用設定
     return driver
