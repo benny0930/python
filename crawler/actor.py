@@ -1,4 +1,4 @@
-
+import threading
 from selenium.webdriver.common.by import By
 
 base = db = None
@@ -16,10 +16,13 @@ def start(_base, _db):
                 print("-----------")
                 print(row)
                 [name, url, website] = row
-                missav(name, url)
+                # missav(name, url)
+                t = threading.Thread(target=missav, args=(name, url,)) # 
+                t.start() # 開始
             except Exception as e:
                 print(e)
-                base.sendTG(str(e))        
+                base.sendTG(name + " : " +str(e))    
+            base.time.sleep(1)
     except Exception as e:
         print(e)
         base.sendTG(str(e))
@@ -28,7 +31,7 @@ def start(_base, _db):
 def missav(name, url):
     driver = base.defaultChrome()
     driver.get(url)
-    base.reciprocal(1)
+    # base.reciprocal(1)
     divList1 = driver.find_elements(
         By.XPATH, '//div[@class="thumbnail group"]/div[1]')
     divList2 = driver.find_elements(

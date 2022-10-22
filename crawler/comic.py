@@ -1,4 +1,4 @@
-
+import threading
 from selenium.webdriver.common.by import By
 
 # base = db = None
@@ -18,11 +18,16 @@ def start(_base, _db):
                 print(row)
                 [id, name, url, website, new_episode] = row
                 if website == 'baozimh':
-                    baozimh(id, name, url, new_episode)
+                    # baozimh(id, name, url, new_episode)
+                    t = threading.Thread(target=baozimh, args=(id, name, url, new_episode,)) # 
+                    t.start() # 開始
                 if website == 'cocomanga':
-                    cocomanga(id, name, url, new_episode)
+                    # cocomanga(id, name, url, new_episode)
+                    t = threading.Thread(target=cocomanga, args=(id, name, url, new_episode,)) # 
+                    t.start() # 開始
+                base.time.sleep(1)
             except Exception as e:
-                base.sendTG(str(e))
+                base.sendTG(name + " : " + str(e))
 
         # baozimhKeep()
 
@@ -78,7 +83,7 @@ def baozimhKeep():
 def baozimh(id, name, url, new_episode):
     driver = base.defaultChrome()
     driver.get(url)
-    base.reciprocal(1)
+    # base.reciprocal(1)
     last_episode = driver.find_element(
         By.XPATH, '//div[@class="supporting-text mt-2"]/div[2]/span/a').text
     # print('id : ' + str(id))
@@ -97,7 +102,7 @@ def baozimh(id, name, url, new_episode):
 def cocomanga(id, name, url, new_episode):
     driver = base.defaultChrome()
     driver.get(url)
-    base.reciprocal(1)
+    # base.reciprocal(1)
     last_episode = driver.find_element(
         By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[5]/a').text
     # print('id : ' + str(id))
