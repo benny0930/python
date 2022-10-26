@@ -19,12 +19,14 @@ def defaultChrome():
     chrome_options.add_argument(
         f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
     chrome_options.add_argument('enable-logging')
+    prefs = {'profile.managed_default_content_settings.images': 2}
+    chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
-    if(os.path.exists('../../chromedriver')):
+    if (os.path.exists('../../chromedriver')):
         s = Service('../../chromedriver')
     else:
         s = Service('../chromedriver')
-    
+
     driver = webdriver.Chrome(service=s, options=chrome_options)  # 套用設定
     driver.minimize_window()
     return driver
@@ -56,5 +58,6 @@ def api_get(_url, _params):
 
 def sendTG(msg):
     chat_id = '-758395812'
-    url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + chat_id + '&parse_mode=html&text=' + msg
+    url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + \
+        chat_id + '&parse_mode=html&text=' + msg
     api_get(url, {})
