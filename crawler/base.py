@@ -26,7 +26,7 @@ def defaultChrome():
         s = Service('../../chromedriver')
     else:
         s = Service('../chromedriver')
-
+    # driver.set_page_load_timeout(30)
     driver = webdriver.Chrome(service=s, options=chrome_options)  # 套用設定
     driver.minimize_window()
     return driver
