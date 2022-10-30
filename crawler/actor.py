@@ -6,7 +6,7 @@ base = db = None
 
 
 def start(_base, _db):
-    
+
     global base, db
     try:
         base = _base
@@ -45,7 +45,8 @@ def missav(name, url):
             driver.find_elements(
                 By.XPATH, '//div[@class="thumbnail group"]/div[1]')
         except TimeoutException:
-            driver.execute_script('window.stop ? window.stop() : document.execCommand("Stop");')
+            driver.execute_script(
+                'window.stop ? window.stop() : document.execCommand("Stop");')
         driver.set_page_load_timeout(30)
         # base.reciprocal(1)
         divList1 = driver.find_elements(
@@ -67,17 +68,18 @@ def missav(name, url):
             av_type = span.get_attribute('innerHTML').strip()
             av_url = a.get_attribute('href').strip()
             av_name = a.get_attribute('innerHTML').strip()
-            
+
             results = db.select(
                 " SELECT id, name FROM fa_av_work WHERE `url` = '%s'" % (av_url))
             if len(results) > 0:
-                print('已存在')
+                print('已存在' + av_type + ' / ' + av_url + ' / ' + av_name)
             else:
                 print("-----")
-                print(av_type + ' / ' + av_url + ' / ' + av_name)
+                print('影片更新:' + av_type + ' / ' + av_url + ' / ' + av_name)
+                print("-----")
                 base.sendTG('影片更新:'+name+"-"+av_name)
                 db.insert("INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))"
-                        % (name, av_name, av_type, av_url))
+                          % (name, av_name, av_type, av_url))
 
             # if av_url in av_url_list:
             #     print('已存在')
