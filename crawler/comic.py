@@ -18,7 +18,7 @@ def start(_base, _db):
 
         t = threading.Thread(target=baozimhKeep, args=())
         t.start()  # 開始
-        return 0
+        
         for row in results:
             try:
                 print("-----------")

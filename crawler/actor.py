@@ -72,10 +72,10 @@ def missav(name, url):
             results = db.select(
                 " SELECT id, name FROM fa_av_work WHERE `url` = '%s'" % (av_url))
             if len(results) > 0:
-                print('已存在' + av_type + ' / ' + av_url + ' / ' + av_name)
+                print('已存在 : ' + av_type + ' / ' + av_url + ' / ' + av_name)
             else:
                 print("-----")
-                print('影片更新:' + av_type + ' / ' + av_url + ' / ' + av_name)
+                print('影片更新 : ' + av_type + ' / ' + av_url + ' / ' + av_name)
                 print("-----")
                 base.sendTG('影片更新:'+name+"-"+av_name)
                 db.insert("INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))"

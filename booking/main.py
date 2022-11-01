@@ -82,7 +82,7 @@ except Exception as e:
 
 while True:
     try:
-        if sec > 5:
+        if sec > 9:
             sec = 0
             print('開始')
             
@@ -133,7 +133,7 @@ while True:
             sec = 61
         else:
             sec = sec + 1
-            print('沒有跨日-'+str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' / 一分鐘後更新:' + str(sec))
+            print('沒有跨日-'+str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' / 10 秒後更新 : ' + str(sec))
             
             time.sleep(1)
 
