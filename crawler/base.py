@@ -1,9 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from inputimeout import inputimeout, TimeoutOccurred
 import time
 import requests
 import os
+
 isChrome = "Y"
 
 
@@ -35,8 +37,13 @@ def defaultChrome():
 def reciprocal(sec):
     for x in range(sec):
         base_int = 10
-        print("倒數:"+str((sec-x)*base_int)+"秒")
-        time.sleep(base_int)
+        # print("倒數:"+str((sec-x)*base_int)+"秒")
+        try:
+            inputimeout(prompt="倒數:"+str((sec-x)*base_int)+"秒、輸入" + ' enter 直接跳過等待 :  ', timeout=10)
+            break
+        except TimeoutOccurred:
+            pass
+       
 
 
 def api_get(_url, _params):

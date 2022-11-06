@@ -15,14 +15,12 @@ if ip == "61.61.91.28":
     # base.time.sleep(30)
     exit()
 
-# 更新演員及作品-------------------------------------------------------------------
-
 isChrome = "Y"
 isLoop = True
 base.set(isChrome)
 while isLoop:
     # isLoop = False
-    # base.sendTG('開始更新')
+    base.sendTG('開始更新')
     try:
         comic.start(base, db)
         # t_comic = threading.Thread(target=comic.start, args=(base, db,))

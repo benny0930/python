@@ -10,7 +10,7 @@ def start(_base, _db):
         base = _base
         db = _db
 
-        base.sendTG('comic start')
+        
 
         sql = "SELECT id, name , url , website, new_episode FROM fa_av_actor WHERE `active` LIKE 'Y' limit 1"  # test
         sql = "SELECT id, name , url , website, new_episode FROM fa_comic WHERE `active` LIKE 'Y'"

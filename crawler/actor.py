@@ -12,7 +12,7 @@ def start(_base, _db):
         base = _base
         db = _db
 
-        base.sendTG('actor start')
+        
 
         sql = "SELECT name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y' limit 1"  # test
         sql = "SELECT name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y'"
