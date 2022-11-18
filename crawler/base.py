@@ -5,6 +5,7 @@ from inputimeout import inputimeout, TimeoutOccurred
 import time
 import requests
 import os
+import chromedriver_autoinstaller as chromedriver
 
 isChrome = "Y"
 
@@ -15,6 +16,7 @@ def set(_isChrome):
 
 
 def defaultChrome():
+    chromedriver.install(cwd=True)
     chrome_options = Options()
     if isChrome != 'Y':
         chrome_options.add_argument('--headless')  # 啟動Headless 無頭
@@ -39,10 +41,11 @@ def reciprocal(sec):
         base_int = 10
         # print("倒數:"+str((sec-x)*base_int)+"秒")
         try:
-            inputimeout(prompt="倒數:"+str((sec-x)*base_int)+"秒、輸入" + ' enter 直接跳過等待 :  ', timeout=10)
-            break
+            inputimeout(prompt="倒數:"+str((sec-x)*base_int)+"秒、輸入" + ' enter 直接跳過倒數 :  ', timeout=base_int)
+            return True
         except TimeoutOccurred:
             pass
+    return False
        
 
 
@@ -63,8 +66,39 @@ def api_get(_url, _params):
     return r.json()
 
 
-def sendTG(msg):
-    chat_id = '-758395812'
+def sendTG(chat_id, msg):
+    """
+    Markdown 語法範例
+    *粗體文字*
+    _斜體文字_
+    __底線文字__
+    ~刪除線文字~
+    *粗體文字 _粗斜體文字 ~粗斜體刪除線文字~ __粗斜底線文字___ 粗體文字*
+    [超連結文字](超連結網址)
+    `等寬字體`
+    ```
+    多行等寬字體
+    的文字區塊
+    ```
+    HTML 語法範例
+    <b>粗體文字</b> 或 <strong>粗體文字</strong>
+    <i>斜體文字</i> 或 <em>斜體文字</em>
+    <u>底線文字</u>, <ins>底線文字</ins>
+    <s>刪除線文字</s> 或 <strike>刪除線文字</strike> 或 <del>刪除線文字</del>
+    <b>粗體文字 <i>粗斜體文字 <s>粗斜體刪除線文字</s> <u>粗斜底線文字</u></i> 粗體文字</b>
+    <a href="超連結網址">超連結文字</a>
+    <code>等寬字體</code>
+    <pre>多行等寬字體
+    的文字區塊</pre>
+    """
     url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + \
         chat_id + '&parse_mode=html&text=' + msg
     api_get(url, {})
+
+
+def send_photo(chat_id, file_opened):
+    api_url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/'
+    method = "sendPhoto"
+    params = {'chat_id': chat_id , 'photo': file_opened}
+    resp = requests.post(api_url + method, params)
+    return resp

@@ -3,6 +3,7 @@ import base
 import db
 import gc
 import comic
+import ptt
 import actor
 import requests
 import threading
@@ -18,21 +19,31 @@ if ip == "61.61.91.28":
 isChrome = "Y"
 isLoop = True
 base.set(isChrome)
+
+index = 0
 while isLoop:
     # isLoop = False
-    base.sendTG('開始更新')
+    print('index = ' + str(index))
     try:
-        comic.start(base, db)
-        # t_comic = threading.Thread(target=comic.start, args=(base, db,))
-        # t_comic.start()  # 開始
-        # base.reciprocal(2)
-        actor.start(base, db)
-        # t_actor = threading.Thread(target=actor.start, args=(base, db,))
-        # t_actor.start()  # 開始
+        # 兩分鐘一次PTT
+        if index % 2 == 0:
+            ptt.start(base, db)
+        # 一小時一次漫畫
+        # 一小時一次影片
+        if index % 60 == 0:
+            base.sendTG('-758395812', '開始更新')
+            comic.start(base, db)
+            actor.start(base, db)
         
+        if base.reciprocal(6):
+            index = 0
+        else:
+            index += 1
+        if index > 60:
+            index = 0
+
     except Exception as e:
         print(e)
-        base.sendTG(str(e))
-    base.reciprocal(60*6+random.randrange(1, 10))
+        base.sendTG('-758395812', str(e))
     gc.collect()
-print(ip)
+
