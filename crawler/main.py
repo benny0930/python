@@ -10,11 +10,11 @@ import threading
 
 
 # 檢查IP-------------------------------------------------------------------
-ip = requests.get('https://api.ipify.org').text
-if ip == "61.61.91.28":
-    print('要換IP!!!!!')
-    # base.time.sleep(30)
-    exit()
+# ip = requests.get('https://api.ipify.org').text
+# if ip == "61.61.91.28":
+#     print('要換IP!!!!!')
+#     # base.time.sleep(30)
+#     exit()
 
 isChrome = "Y"
 isLoop = True
@@ -39,7 +39,8 @@ while isLoop:
             index = 0
         else:
             index += 1
-        if index > 60:
+
+        if index > 59:
             index = 0
 
     except Exception as e:

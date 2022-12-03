@@ -1,3 +1,4 @@
+import telegram
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -8,7 +9,7 @@ import os
 import chromedriver_autoinstaller as chromedriver
 
 isChrome = "Y"
-
+bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
 
 def set(_isChrome):
     global isChrome
@@ -66,7 +67,8 @@ def api_get(_url, _params):
     return r.json()
 
 
-def sendTG(chat_id, msg):
+def sendTG(_chat_id, _msg):
+    bot.sendMessage(chat_id=_chat_id, text=_msg, parse_mode='html')
     """
     Markdown 語法範例
     *粗體文字*
@@ -91,14 +93,18 @@ def sendTG(chat_id, msg):
     <pre>多行等寬字體
     的文字區塊</pre>
     """
-    url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + \
-        chat_id + '&parse_mode=html&text=' + msg
-    api_get(url, {})
+    # url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/sendMessage?chat_id=' + \
+    #     chat_id + '&parse_mode=html&text=' + msg
+    # api_get(url, {})
+
+    
 
 
-def send_photo(chat_id, file_opened):
-    api_url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/'
-    method = "sendPhoto"
-    params = {'chat_id': chat_id , 'photo': file_opened}
-    resp = requests.post(api_url + method, params)
-    return resp
+
+def send_photo(_chat_id, _file_opened, _caption = ""):
+    bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
+    # api_url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/'
+    # method = "sendPhoto"
+    # params = {'chat_id': chat_id , 'photo': file_opened}
+    # resp = requests.post(api_url + method, params)
+    # return resp
