@@ -3,18 +3,21 @@ import base
 import db
 import gc
 import comic
+import ptt
 import actor
 import requests
 import threading
-import numpy as np
-import datetime as dt
-import telegram
 
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 
-bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
-chat_id = '-695426401' # 測試
+# 檢查IP-------------------------------------------------------------------
+# ip = requests.get('https://api.ipify.org').text
+# if ip == "61.61.91.28":
+#     print('要換IP!!!!!')
+#     # base.time.sleep(30)
+#     exit()
+
+isChrome = "Y"
+isLoop = True
+base.set(isChrome)
+ptt.start(base, db)
 

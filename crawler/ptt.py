@@ -81,20 +81,22 @@ def Beauty():
     driver.get('https://www.ptt.cc/bbs/Beauty/index.html')
 
     all_a = driver.find_elements(By.XPATH, '//div[@class="r-ent"]/div[@class="title"]/a')
-
+    print(len(all_a))
     try:
         for a in all_a:
-            if a.text.find('公告') >= 0:
-                continue
-            
-            if a.text.find('大尺碼') >= 0:
-                continue
-
-            if a.text.find('肉特') >= 0:
-                continue
 
             [url, title] = [a.get_attribute('href'), a.text]
+            print([url, title])
+
+            if title.find('公告') >= 0:
+                continue
             
+            if title.find('大尺碼') >= 0:
+                continue
+
+            if title.find('肉特') >= 0:
+                continue
+
             results = db.select(
                     " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
@@ -121,7 +123,9 @@ def Beauty():
                     print(e)
 
                 driver1.close()
-            
+            else:
+                print('已存在')
+
     except Exception as e:
         print(e)
 
