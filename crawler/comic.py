@@ -83,6 +83,8 @@ def baozimhKeep():
                     By.XPATH, '//div[@class="bookshelf-items"]['+str(index)+']/div[@class="info"]/ul/li[5]').text
                 last_episode = last_episode.replace('最新章节: ', '')
                 index = index + 1
+                new_url = url.split("_")
+                url = new_url[0]
                 print([title, url, last_episode])
 
                 results = db.select(
