@@ -135,7 +135,7 @@ def cocomanga(id, name, url, new_episode):
     base.time.sleep(5)
     # base.reciprocal(1)
     last_episode = driver.find_element(
-        By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[5]/a').text
+        By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[4]/a').text
     # print('id : ' + str(id))
     driver.close()
     print('name : ' + name + ' / last_episode : ' +
