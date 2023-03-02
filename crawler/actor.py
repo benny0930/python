@@ -66,7 +66,7 @@ def missav(name, url):
             span = aList[1].find_element(By.XPATH, './/span')
             a = divList2[index].find_element(By.XPATH, './/a')
             av_type = span.get_attribute('innerHTML').strip().replace("'",'')
-            av_url = a.get_attribute('href').strip().replace("'",'')
+            av_url = a.get_attribute('href').strip().replace("'",'').replace(":80",'')
             av_name = a.get_attribute('innerHTML').strip().replace("'",'')
 
             results = db.select(

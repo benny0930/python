@@ -18,14 +18,9 @@ from selenium.webdriver.common.by import By
 
 name = 'name'
 new_episode = 'new_episode'
-url = 'https://www.colamanhua.com/manga-rv65322/'
-
-driver = base.defaultChrome()
-driver.get(url)
-base.time.sleep(5)
-# base.reciprocal(1)
-last_episode = driver.find_element(By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[4]/a').text
-print(last_episode)
+url = 'https://www.colamanhua.com/manga-qc27297/'
+last_episode = '2023-02-08'
+print(index_of(last_episode,'023'))
 
 
 
