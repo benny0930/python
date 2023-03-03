@@ -11,19 +11,16 @@ def start(_base, _db):
     try:
         base = _base
         db = _db
-
-        
-
-        sql = "SELECT name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y' limit 1"  # test
-        sql = "SELECT name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y'"
+        sql = "SELECT id, name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y' limit 1"  # test
+        sql = "SELECT id, name , url , website FROM fa_av_actor WHERE `active` LIKE 'Y'"
         results = db.select(sql)
         for row in results:
             try:
                 print("-----------")
                 print(row)
-                [name, url, website] = row
+                [id, name, url, website] = row
                 # missav(name, url)
-                t = threading.Thread(target=missav, args=(name, url,))
+                t = threading.Thread(target=missav, args=(id, name, url,))
                 t.start()  # 開始
             except Exception as e:
                 print(e)
@@ -36,7 +33,7 @@ def start(_base, _db):
     return True
 
 
-def missav(name, url):
+def missav(id, name, url):
     driver = base.defaultChrome()
     try:
         driver.set_page_load_timeout(5)
@@ -73,6 +70,8 @@ def missav(name, url):
                 " SELECT id, name FROM fa_av_work WHERE `url` = '%s'" % (av_url))
             if len(results) > 0:
                 print('已存在 : ' + av_type + ' / ' + av_url + ' / ' + av_name)
+                db.insert(" UPDATE `fa_av_actor` SET updatetime= UNIX_TIMESTAMP(NOW()) WHERE  `id`='%s' "
+                  % (str(id)))
             else:
                 print("-----")
                 print('影片更新 : ' + name + ' / ' + av_name + ' / ' + av_type + ' / ' + av_url)
