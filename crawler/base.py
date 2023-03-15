@@ -8,18 +8,25 @@ import requests
 import os
 import chromedriver_autoinstaller as chromedriver
 
-isChrome = "Y"
 bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
+isTest = False
+isShowChrome = "Y"
+chat_id_test = "-1001911277875"
+chat_id_image = "-1001771451912" # 正式
 
-def set(_isChrome):
-    global isChrome
-    isChrome = _isChrome
+
+def set(_isTest = False, _isChrome = "Y" ):
+    global isTest, isShowChrome, chat_id_image
+    isTest = _isTest
+    isShowChrome = _isChrome
+    if _isTest :
+        chat_id_image = chat_id_test  # 測試用
 
 
 def defaultChrome():
     chromedriver.install(cwd=True)
     chrome_options = Options()
-    if isChrome != 'Y':
+    if isShowChrome != 'Y':
         chrome_options.add_argument('--headless')  # 啟動Headless 無頭
     chrome_options.add_argument(
         f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
@@ -102,7 +109,13 @@ def sendTG(_chat_id, _msg):
 
 
 def send_photo(_chat_id, _file_opened, _caption = ""):
-    bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
+    val = _file_opened.rsplit('.', 1)[1]
+    if val == 'gif':
+        # Send a gif
+        bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
+    else:
+        # Send a Picture
+        bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
     # api_url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/'
     # method = "sendPhoto"
     # params = {'chat_id': chat_id , 'photo': file_opened}

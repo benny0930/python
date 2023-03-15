@@ -15,7 +15,7 @@ def start(_base, _db):
         t.start()  # 開始
 
     except Exception as e:
-        base.sendTG('-758395812', str(e))
+        base.sendTG(base.chat_id_test, str(e))
 
     return True
 

@@ -24,11 +24,11 @@ def start(_base, _db):
                 t.start()  # 開始
             except Exception as e:
                 print(e)
-                base.sendTG('-758395812', name + " : " + str(e))
+                base.sendTG(base.chat_id_test, name + " : " + str(e))
             base.time.sleep(1)
     except Exception as e:
         print(e)
-        base.sendTG('-758395812', str(e))
+        base.sendTG(base.chat_id_test, str(e))
 
     return True
 
@@ -76,7 +76,7 @@ def missav(id, name, url):
                 print("-----")
                 print('影片更新 : ' + name + ' / ' + av_name + ' / ' + av_type + ' / ' + av_url)
                 print("-----")
-                base.sendTG('-758395812', '影片更新:'+name+"-"+av_name)
+                base.sendTG(base.chat_id_test, '影片更新:'+name+"-"+av_name)
                 sql = "INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (name, av_name, av_type, av_url)
                 db.insert(sql)
                 
@@ -84,12 +84,12 @@ def missav(id, name, url):
             # if av_url in av_url_list:
             #     print('已存在')
             # else:
-            #     base.sendTG('-758395812', '影片更新:'+name+"-"+av_name)
+            #     base.sendTG(base.chat_id_test, '影片更新:'+name+"-"+av_name)
             #     db.insert("INSERT INTO `fa_av_work` (`actor`, `name`, `av_type`, `url`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))"
             #             % (name, av_name, av_type, av_url))
 
             index += 1
     except Exception as e:
         print(e)
-        base.sendTG('-758395812', str(e))
+        base.sendTG(base.chat_id_test, str(e))
     driver.close()
