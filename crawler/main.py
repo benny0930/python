@@ -36,7 +36,7 @@ while isLoop:
         # 一小時一次漫畫
         # 一小時一次影片
         if index % 60 == 0:
-            base.sendTG(base.chat_id_test, '開始更新')
+            # base.sendTG(base.chat_id_test, '開始更新')
             comic.start(base, db)
             actor.start(base, db)
         

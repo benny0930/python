@@ -34,12 +34,16 @@ def defaultChrome():
     prefs = {'profile.managed_default_content_settings.images': 2}
     chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
-    if (os.path.exists('../../chromedriver')):
-        s = Service('../../chromedriver')
+    driver = webdriver.Chrome(options=chrome_options)  # 套用設定
+    chrome_version = driver.capabilities['browserVersion'].split(".")[0]
+    driver.quit()
+    print('chrome_version : ' + chrome_version)
+    if (os.path.exists('./' + chrome_version )):
+        service = Service('./' + chrome_version + '/chromedriver')
     else:
-        s = Service('../chromedriver')
+        service = Service('./chromedriver')
     # driver.set_page_load_timeout(30)
-    driver = webdriver.Chrome(service=s, options=chrome_options)  # 套用設定
+    driver = webdriver.Chrome(service=service, options=chrome_options)  # 套用設定
     driver.minimize_window()
     return driver
 
