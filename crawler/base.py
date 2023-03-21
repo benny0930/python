@@ -7,11 +7,14 @@ import time
 import requests
 import os
 import chromedriver_autoinstaller as chromedriver
+import urllib3
+urllib3.disable_warnings()
 
 bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
 isTest = False
 isShowChrome = "Y"
 chat_id_test = "-1001911277875"
+# chat_id_image = chat_id_test
 chat_id_image = "-1001771451912" # 正式
 
 
@@ -125,3 +128,11 @@ def send_photo(_chat_id, _file_opened, _caption = ""):
     # params = {'chat_id': chat_id , 'photo': file_opened}
     # resp = requests.post(api_url + method, params)
     # return resp
+
+def ouo(_url):
+    "http://ouo.io/api/K7YG4nn8?s=yourdestinationlink.com"
+    r = requests.get("http://ouo.io/api/K7YG4nn8?s="+_url, verify=False)
+    return r.text
+
+def broadcast():
+    sendTG(chat_id_image, '<b>請多點擊鏈接</b><pre>您的點擊是我們更新的動力</pre>')

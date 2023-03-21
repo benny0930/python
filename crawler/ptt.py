@@ -1,6 +1,7 @@
 import threading
 from selenium.webdriver.common.by import By
 
+
 # base = db = None
 
 
@@ -13,6 +14,9 @@ def set(_base, _db):
 def start(_base, _db, index=0):
     set(_base, _db)
     try:
+        if index == 0:
+            base.broadcast()
+
         # 看板 Gamesale
         title = 'Gamesale'
         results = db.select(" SELECT id, title, is_active, val FROM fa_is_open WHERE `title` = '%s'" % (title))
@@ -38,7 +42,6 @@ def start(_base, _db, index=0):
             t = threading.Thread(target=Nungvl, args=())
             t.start()  # 開始
 
-
         # http://www.playno1.com/portal.php?mod=list&catid=78
         # title = 'Playno1'
         # results = db.select(" SELECT id, title, is_active, val FROM fa_is_open WHERE `title` = '%s'" % (title))
@@ -47,13 +50,12 @@ def start(_base, _db, index=0):
         #     # base.sendTG(base.chat_id_test, 'Playno1 Start')
         #     t = threading.Thread(target=Playno1, args=())
         #     t.start()  # 開始
-        
+
 
     except Exception as e:
         base.sendTG(base.chat_id_test, str(e))
 
     return True
-
 
 
 def Gamesale():
@@ -71,12 +73,13 @@ def Gamesale():
                 break
             if a.text.find('NS') < 0:
                 continue
-            [url,title] = [a.get_attribute('href'), a.text]
+            [url, title] = [a.get_attribute('href'), a.text]
             results = db.select(
                 " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
-                sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % ('Gamesale', url, title)
-                if not base.isTest :
+                sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
+                'Gamesale', url, title)
+                if not base.isTest:
                     db.insert(sql)
                 driver1 = base.defaultChrome()
                 try:
@@ -84,7 +87,8 @@ def Gamesale():
                     driver1.add_cookie({'name': 'over18', 'value': '1'})
                     driver1.get(url)
                     driver1.get_screenshot_as_file("python_ptt.png")
-                    base.send_photo('-1001742966379', open("python_ptt.png", "rb"), '<pre>Gamesale : ' + title + ' </pre>' + url )
+                    base.send_photo('-1001742966379', open("python_ptt.png", "rb"),
+                                    '<pre>Gamesale : ' + title + ' </pre>' + url)
 
                 except Exception as e:
                     print(e)
@@ -92,9 +96,10 @@ def Gamesale():
 
 
     except Exception as e:
-            base.sendTG(base.chat_id_test, str(e))
+        base.sendTG(base.chat_id_test, str(e))
 
     driver.close()
+
 
 def Beauty():
     driver = base.defaultChrome()
@@ -113,7 +118,7 @@ def Beauty():
             if title.find('公告') >= 0:
                 print('跳過')
                 continue
-            
+
             if title.find('大尺碼') >= 0:
                 print('跳過')
                 continue
@@ -123,18 +128,20 @@ def Beauty():
                 continue
 
             results = db.select(
-                    " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
+                " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
                 driver1 = base.defaultChrome()
                 try:
                     print("-----")
                     print('Beauty : ' + title + ' / ' + url)
                     print("-----")
-                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + url)
-                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % ('Beauty', url, title)
-                    if not base.isTest :
+                    ouo_url = base.ouo(url)
+                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + ouo_url)
+                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
+                    'Beauty', url, title)
+                    if not base.isTest:
                         db.insert(sql)
-                    
+
                     driver1.get(url)
                     driver1.add_cookie({'name': 'over18', 'value': '1'})
                     driver1.get(url)
@@ -144,7 +151,7 @@ def Beauty():
                         print(one_a.get_attribute('href'))
                         base.send_photo(base.chat_id_image, one_a.get_attribute('href'))
 
-                    
+
                 except Exception as e:
                     print(e)
 
@@ -156,6 +163,7 @@ def Beauty():
         print(e)
 
     driver.close()
+
 
 def Nungvl():
     driver = base.defaultChrome()
@@ -168,20 +176,22 @@ def Nungvl():
 
             [url, title] = [a.get_attribute('href'), a.text]
             print([url, title])
-            
+
             results = db.select(
-                    " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
+                " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
                 driver1 = base.defaultChrome()
                 try:
                     print("-----")
                     print('Nungvl : ' + title + ' / ' + url)
                     print("-----")
-                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + url)
-                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % ('Beauty', url, title)
-                    if not base.isTest :
+                    ouo_url = base.ouo(url)
+                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + ouo_url)
+                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
+                    'Beauty', url, title)
+                    if not base.isTest:
                         db.insert(sql)
-                    getNungvlPageImage(driver1, url)    
+                    getNungvlPageImage(driver1, url)
                 except Exception as e:
                     print(e)
                 driver1.close()
@@ -191,6 +201,7 @@ def Nungvl():
         print(e)
 
     driver.close()
+
 
 def Playno1():
     driver = base.defaultChrome()
@@ -215,11 +226,12 @@ def Playno1():
                     print("-----")
                     print('Playno1 : ' + title + ' / ' + url)
                     print("-----")
-                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + url)
+                    ouo_url = base.ouo(url)
+                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + ouo_url)
                     sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
-                    'Beauty', url, title)
+                        'Beauty', url, title)
 
-                    if not base.isTest :
+                    if not base.isTest:
                         db.insert(sql)
 
                     driver1.get(url)
@@ -244,6 +256,7 @@ def Playno1():
         print(e)
 
     driver.close()
+
 
 def getNungvlPageImage(driver1, url):
     driver1.get(url)
