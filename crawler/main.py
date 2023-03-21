@@ -30,6 +30,9 @@ while isLoop:
     # isLoop = False
     print('index = ' + str(index))
     try:
+        if index % 240 == 0:
+            base.broadcast()
+
         # 兩分鐘一次PTT
         ptt.start(base, db, index)
 
@@ -45,8 +48,8 @@ while isLoop:
         else:
             index += 1
 
-        if index > 59:
-            index = 0
+        # if index > 59:
+        #     index = 0
 
     except Exception as e:
         print(e)

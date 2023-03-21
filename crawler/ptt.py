@@ -14,9 +14,6 @@ def set(_base, _db):
 def start(_base, _db, index=0):
     set(_base, _db)
     try:
-        if index == 0:
-            base.broadcast()
-
         # 看板 Gamesale
         title = 'Gamesale'
         results = db.select(" SELECT id, title, is_active, val FROM fa_is_open WHERE `title` = '%s'" % (title))

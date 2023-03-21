@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from inputimeout import inputimeout, TimeoutOccurred
 import time
+import db
 import requests
 import os
 import chromedriver_autoinstaller as chromedriver
@@ -134,5 +135,14 @@ def ouo(_url):
     r = requests.get("http://ouo.io/api/K7YG4nn8?s="+_url, verify=False)
     return r.text
 
-def broadcast():
-    sendTG(chat_id_image, '<b>請多點擊鏈接</b><pre>您的點擊是我們更新的動力</pre>')
+def broadcast(chat_id = chat_id_image):
+    str = '<b>請多點擊鏈接</b><pre>您的點擊是我們更新的動力</pre><pre>  </pre>'
+
+    str += '<pre><b>前十則文章回顧：</b></pre>'
+
+    results = db.select("SELECT title, url FROM fa_ptt ORDER BY createtime DESC LIMIT 10")
+    for result in results:
+
+        str += '<a href="'+ouo(result[1])+'">'+result[0]+'</a>\n'
+
+    sendTG(chat_id, str)
