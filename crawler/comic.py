@@ -9,13 +9,14 @@ def start(_base, _db):
     try:
         base = _base
         db = _db
-        base.sendTG(base.chat_id_test, 'baozimhKeep Start')
+        # base.sendTG(base.chat_id_test, 'baozimhKeep Start')
         sql = "SELECT id, name , url , website, new_episode FROM fa_av_actor WHERE `active` LIKE 'Y' limit 1"  # test
         sql = "SELECT id, name , url , website, new_episode FROM fa_comic WHERE `active` LIKE 'Y'"
         results = db.select(sql)
 
-        t = threading.Thread(target=baozimhKeep, args=())
-        t.start()  # 開始
+        baozimhKeep()
+        # t = threading.Thread(target=baozimhKeep, args=())
+        # t.start()  # 開始
         
         for row in results:
             try:
@@ -28,10 +29,10 @@ def start(_base, _db):
                     # t = threading.Thread(target=baozimh, args=(id, name, url, new_episode,))
                     # t.start()  # 開始
                 if website == 'cocomanga':
-                    # cocomanga(id, name, url, new_episode)
-                    t = threading.Thread(target=cocomanga, args=(
-                        id, name, url, new_episode,))
-                    t.start()  # 開始
+                    cocomanga(id, name, url, new_episode)
+                    # t = threading.Thread(target=cocomanga, args=(
+                    #     id, name, url, new_episode,))
+                    # t.start()  # 開始
                 base.time.sleep(1)
             except Exception as e:
                 base.sendTG(base.chat_id_test, name + " : " + str(e))

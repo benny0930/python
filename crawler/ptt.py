@@ -48,6 +48,14 @@ def start(_base, _db, index=0):
         #     t = threading.Thread(target=Playno1, args=())
         #     t.start()  # 開始
 
+        # 看板 Lifeismoney
+        title = 'Lifeismoney'
+        results = db.select(" SELECT id, title, is_active, val FROM fa_is_open WHERE `title` = '%s'" % (title))
+        [id, title, is_active, val] = results[0]
+        if is_active == 'Y' and index % int(val) == 0:
+            t = threading.Thread(target=Lifeismoney, args=())
+            t.start()  # 開始
+
 
     except Exception as e:
         base.sendTG(base.chat_id_test, str(e))
@@ -274,3 +282,47 @@ def getNungvlPageImage(driver1, url):
         getNungvlPageImage(driver1, url_next)
     except Exception as e:
         pass
+
+
+def Lifeismoney():
+    driver = base.defaultChrome()
+    driver.get('https://www.ptt.cc/bbs/Lifeismoney/index.html')
+    driver.add_cookie({'name': 'over18', 'value': '1'})
+    driver.get('https://www.ptt.cc/bbs/Lifeismoney/index.html')
+
+    all_a = driver.find_elements(By.XPATH, '//div[@class="r-ent"]/div[@class="title"]/a')
+    print(len(all_a))
+
+    try:
+        for a in all_a:
+            if a.text.find('公告') >= 0:
+                continue
+            if a.text.find('本文已被刪除') >= 0:
+                continue
+            [url, title] = [a.get_attribute('href'), a.text]
+            results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
+            if len(results) < 1:
+                sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % ('Lifeismoney', url, title)
+                if not base.isTest:
+                    db.insert(sql)
+                driver1 = base.defaultChrome()
+                try:
+                    driver1.get(url)
+                    driver1.add_cookie({'name': 'over18', 'value': '1'})
+                    driver1.get(url)
+                    driver1.get_screenshot_as_file("python_ptt.png")
+                    ouo_url = base.shotUrl(url)
+                    print("111")
+                    with open("python_ptt.png", 'rb') as photo_file:
+                        base.send_photo(base.chat_id_money, photo_file, '<a href="' + ouo_url + '">' + title + '</a>', True)
+                    print("222")
+                except Exception as e:
+                    print("000 111")
+                    print(e)
+                driver1.close()
+
+
+    except Exception as e:
+        base.sendTG(base.chat_id_test, str(e))
+
+    driver.close()

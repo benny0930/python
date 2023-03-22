@@ -9,25 +9,32 @@ import requests
 import os
 import chromedriver_autoinstaller as chromedriver
 import urllib3
+
 urllib3.disable_warnings()
 
 bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
 isTest = False
+chrome_version = ''
 isShowChrome = "Y"
 chat_id_test = "-1001911277875"
+chat_id_image = "-1001771451912"  # 正式
+chat_id_money = "-1001912123757"  # 正式
+
+
 # chat_id_image = chat_id_test
-chat_id_image = "-1001771451912" # 正式
 
 
-def set(_isTest = False, _isChrome = "Y" ):
+def set(_isTest=False, _isChrome="Y"):
     global isTest, isShowChrome, chat_id_image
     isTest = _isTest
     isShowChrome = _isChrome
-    if _isTest :
+    if _isTest:
         chat_id_image = chat_id_test  # 測試用
+        chat_id_money = chat_id_test  # 測試用
 
 
-def defaultChrome():
+def defaultChrome(is_check_version=False):
+    global chrome_version
     chromedriver.install(cwd=True)
     chrome_options = Options()
     if isShowChrome != 'Y':
@@ -38,11 +45,13 @@ def defaultChrome():
     prefs = {'profile.managed_default_content_settings.images': 2}
     chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
-    driver = webdriver.Chrome(options=chrome_options)  # 套用設定
-    chrome_version = driver.capabilities['browserVersion'].split(".")[0]
-    driver.quit()
-    print('chrome_version : ' + chrome_version)
-    if (os.path.exists('./' + chrome_version )):
+
+    if is_check_version or chrome_version == "":
+        driver = webdriver.Chrome(options=chrome_options)  # 套用設定
+        chrome_version = driver.capabilities['browserVersion'].split(".")[0]
+        driver.quit()
+        print('chrome_version : ' + chrome_version)
+    if (os.path.exists('./' + chrome_version)):
         service = Service('./' + chrome_version + '/chromedriver')
     else:
         service = Service('./chromedriver')
@@ -57,12 +66,12 @@ def reciprocal(sec):
         base_int = 10
         # print("倒數:"+str((sec-x)*base_int)+"秒")
         try:
-            inputimeout(prompt="倒數:"+str((sec-x)*base_int)+"秒、輸入" + ' enter 直接跳過倒數 :  ', timeout=base_int)
+            inputimeout(prompt="倒數:" + str((sec - x) * base_int) + "秒、輸入" + ' enter 直接跳過倒數 :  ',
+                        timeout=base_int)
             return True
         except TimeoutOccurred:
             pass
     return False
-       
 
 
 def api_get(_url, _params):
@@ -112,12 +121,11 @@ def sendTG(_chat_id, _msg):
     #     chat_id + '&parse_mode=html&text=' + msg
     # api_get(url, {})
 
-    
 
-
-
-def send_photo(_chat_id, _file_opened, _caption = ""):
-    val = _file_opened.rsplit('.', 1)[1]
+def send_photo(_chat_id, _file_opened, _caption="", isPhoto=False):
+    val = ""
+    if not isPhoto:
+        val = _file_opened.rsplit('.', 1)[1]
     if val == 'gif':
         # Send a gif
         bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
@@ -130,21 +138,33 @@ def send_photo(_chat_id, _file_opened, _caption = ""):
     # resp = requests.post(api_url + method, params)
     # return resp
 
+
 def shotUrl(_url):
     # return "http://ouo.io/qs/K7YG4nn8?s="+_url
 
     "http://ouo.io/api/K7YG4nn8?s=yourdestinationlink.com"
-    r = requests.get("http://ouo.io/api/K7YG4nn8?s="+_url, verify=False)
+    r = requests.get("http://ouo.io/api/K7YG4nn8?s=" + _url, verify=False)
     return r.text
 
-def broadcast(chat_id = chat_id_image):
+
+def broadcast():
     str = '<b>請多點擊鏈接</b><pre>您的點擊是我們更新的動力</pre><pre>  </pre>'
 
-    str += '<pre><b>前十則文章回顧：</b></pre>'
+    str += '<b>友站鏈接</b><pre>歡迎您的加入</pre>'
+    str += '<a href="https://t.me/KPTTBeauty">正妹圖片分享</a>\n'
+    str += '<a href="https://t.me/KPTTMoney">省錢好康情報站</a>\n'
+    str += '<pre>  </pre>'
 
-    results = db.select("SELECT title, url FROM fa_ptt ORDER BY createtime DESC LIMIT 10")
+    strBeauty = str + '<pre><b>文章回顧：</b></pre>'
+    name = 'Beauty'
+    results = db.select("SELECT title, url FROM fa_ptt WHERE `name` = '%s' ORDER BY createtime DESC LIMIT 6" % (name))
     for result in results:
+        strBeauty += '<a href="' + shotUrl(result[1]) + '">' + result[0] + '</a>\n'
+    sendTG(chat_id_image, strBeauty)
 
-        str += '<a href="'+ouo(result[1])+'">'+result[0]+'</a>\n'
-
-    sendTG(chat_id, str)
+    strLifeismoney = str + '<pre><b>文章回顧：</b></pre>'
+    name = 'Lifeismoney'
+    results = db.select("SELECT title, url FROM fa_ptt WHERE `name` = '%s' ORDER BY createtime DESC LIMIT 6" % (name))
+    for result in results:
+        strLifeismoney += '<a href="' + shotUrl(result[1]) + '">' + result[0] + '</a>\n'
+    sendTG(chat_id_money, strLifeismoney)

@@ -30,6 +30,11 @@ while isLoop:
     # isLoop = False
     print('index = ' + str(index))
     try:
+        try:
+            base.defaultChrome(True)
+        except Exception as e:
+            print(e)
+
         if index % 240 == 0:
             base.broadcast()
 
@@ -41,9 +46,13 @@ while isLoop:
         # 一小時一次漫畫
         # 一小時一次影片
         if index % 60 == 0:
-            # base.sendTG(base.chat_id_test, '開始更新')
             comic.start(base, db)
-            actor.start(base, db)
+            t = threading.Thread(target=comic.start, args=(base, db))
+            t.start()  # 開始
+            # base.sendTG(base.chat_id_test, '開始更新')
+            # actor.start(base, db)
+            t = threading.Thread(target=actor.start, args=(base, db))
+            t.start()  # 開始
         
         if base.reciprocal(6):
             index = 0

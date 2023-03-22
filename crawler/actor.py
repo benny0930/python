@@ -19,9 +19,9 @@ def start(_base, _db):
                 print("-----------")
                 print(row)
                 [id, name, url, website] = row
-                # missav(name, url)
-                t = threading.Thread(target=missav, args=(id, name, url,))
-                t.start()  # 開始
+                missav(id, name, url)
+                # t = threading.Thread(target=missav, args=(id, name, url,))
+                # t.start()  # 開始
             except Exception as e:
                 print(e)
                 base.sendTG(base.chat_id_test, name + " : " + str(e))
