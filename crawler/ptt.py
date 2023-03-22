@@ -124,6 +124,10 @@ def Beauty():
                 print('跳過')
                 continue
 
+            if title.find('帥哥') >= 0:
+                print('跳過')
+                continue
+
             results = db.select(
                 " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
@@ -132,8 +136,8 @@ def Beauty():
                     print("-----")
                     print('Beauty : ' + title + ' / ' + url)
                     print("-----")
-                    ouo_url = base.ouo(url)
-                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + ouo_url)
+                    ouo_url = base.shotUrl(url)
+                    base.sendTG(base.chat_id_image, '<a href="' + ouo_url + '">' + title + '</a>')
                     sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
                     'Beauty', url, title)
                     if not base.isTest:
@@ -182,8 +186,8 @@ def Nungvl():
                     print("-----")
                     print('Nungvl : ' + title + ' / ' + url)
                     print("-----")
-                    ouo_url = base.ouo(url)
-                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + ouo_url)
+                    ouo_url = base.shotUrl(url)
+                    base.sendTG(base.chat_id_image, '<a href="' + ouo_url + '">' + title + '</a>')
                     sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
                     'Beauty', url, title)
                     if not base.isTest:
@@ -223,8 +227,8 @@ def Playno1():
                     print("-----")
                     print('Playno1 : ' + title + ' / ' + url)
                     print("-----")
-                    ouo_url = base.ouo(url)
-                    base.sendTG(base.chat_id_image, '<pre>' + title + '</pre>' + ouo_url)
+                    ouo_url = base.shotUrl(url)
+                    base.sendTG(base.chat_id_image, '<a href="' + ouo_url + '">' + title + '</a>')
                     sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
                         'Beauty', url, title)
 

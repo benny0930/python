@@ -130,7 +130,9 @@ def send_photo(_chat_id, _file_opened, _caption = ""):
     # resp = requests.post(api_url + method, params)
     # return resp
 
-def ouo(_url):
+def shotUrl(_url):
+    # return "http://ouo.io/qs/K7YG4nn8?s="+_url
+
     "http://ouo.io/api/K7YG4nn8?s=yourdestinationlink.com"
     r = requests.get("http://ouo.io/api/K7YG4nn8?s="+_url, verify=False)
     return r.text

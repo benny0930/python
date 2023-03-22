@@ -6,7 +6,7 @@ import comic
 import ptt
 import actor
 import KPythonBot
-
+import autoShotUrl
 import requests
 import threading
 
@@ -32,6 +32,8 @@ while isLoop:
     try:
         if index % 240 == 0:
             base.broadcast()
+
+        # autoShotUrl.start(base, db)
 
         # 兩分鐘一次PTT
         ptt.start(base, db, index)
