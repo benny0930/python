@@ -1,5 +1,6 @@
 # 匯入相關套件
 import time
+import stock
 
 from telegram.ext import Updater # 更新者
 from telegram.ext import CommandHandler, CallbackQueryHandler # 註冊處理 一般用 回答用
@@ -19,11 +20,33 @@ def start():
 
     # 定義收到訊息後的動作(新增handler)
     def get_chat_id(bot, update): # 新增指令/start
-        message = update.message
-        chat = message['chat']
-        update.message.reply_text(text='chat_id : ' + str(chat['id']))
+        try:
+            message = update.message
+            chat = message['chat']
+            text = message['text']
+            print(text)
+            update.message.reply_text(text='chat_id : ' + str(chat['id']))
+        except Exception as e:
+            update.message.reply_text(text='get_chat_id 未知錯誤')
 
     dispatcher.add_handler(CommandHandler('get_chat_id', get_chat_id))
+
+
+    def stock_info(bot, update): # 新增指令/start
+        try:
+            message = update.message
+            chat = message['chat']
+            text = message['text']
+            aArr = text.split(' ', 1)
+            aStockInfo = stock.start(aArr[1])
+            str = ""
+            for key in aStockInfo:
+                str += '<b>'+key+'</b><pre>'+aStockInfo[key][0]+'</pre>\n'
+            update.message.reply_text(text=str,parse_mode="html")
+        except Exception as e:
+            update.message.reply_text(text='stock_info 未知錯誤')
+
+    dispatcher.add_handler(CommandHandler('stock_info', stock_info))
 
 
     # 開始運作bot
