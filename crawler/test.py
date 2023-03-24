@@ -11,8 +11,6 @@ import requests
 import threading
 import autoShotUrl
 
-
-
 base.set(True)
-ptt.set(base, db)
-ptt.Lifeismoney()
+ptt.set(base,db)
+ptt.Nungvl()

@@ -92,7 +92,7 @@ def Gamesale():
                     driver1.add_cookie({'name': 'over18', 'value': '1'})
                     driver1.get(url)
                     driver1.get_screenshot_as_file("python_ptt.png")
-                    base.send_photo('-1001742966379', open("python_ptt.png", "rb"),
+                    base.send_photo(base.chat_id_test, open("python_ptt.png", "rb"),
                                     '<pre>Gamesale : ' + title + ' </pre>' + url)
 
                 except Exception as e:
@@ -156,10 +156,12 @@ def Beauty():
                     driver1.get(url)
                     all_one_a = driver1.find_elements(By.XPATH, '//div[@id="main-content"]/a')
 
+                    media = []
                     for one_a in all_one_a:
                         print(one_a.get_attribute('href'))
-                        base.send_photo(base.chat_id_image, one_a.get_attribute('href'))
-
+                        # base.send_photo(base.chat_id_image, one_a.get_attribute('href'))
+                        media.append(one_a.get_attribute('href'))
+                    base.send_media_group(base.chat_id_image, media)
 
                 except Exception as e:
                     print(e)
@@ -200,7 +202,8 @@ def Nungvl():
                     'Beauty', url, title)
                     if not base.isTest:
                         db.insert(sql)
-                    getNungvlPageImage(driver1, url)
+                    media = getNungvlPageImage(driver1, url, [])
+                    base.send_media_group(base.chat_id_image, media)
                 except Exception as e:
                     print(e)
                 driver1.close()
@@ -250,12 +253,16 @@ def Playno1():
                     base.time.sleep(2)
                     all_img_a = driver1.find_elements(By.XPATH, '//img[@onload="thumbImg(this)"]')
                     print(len(all_img_a))
+                    media = []
                     for one_img in all_img_a:
                         print(one_img.get_attribute('src'))
                         try:
                             one_img.get_attribute('src').index("back.gif")
                         except:
-                            base.send_photo(base.chat_id_image, one_img.get_attribute('src'))
+                            # base.send_photo(base.chat_id_image, one_img.get_attribute('src'))
+                            media.append(one_img.get_attribute('src'))
+                    base.send_media_group(base.chat_id_image, media)
+
                 except Exception as e:
                     print(e)
                 driver1.close()
@@ -267,21 +274,25 @@ def Playno1():
     driver.close()
 
 
-def getNungvlPageImage(driver1, url):
+def getNungvlPageImage(driver1, url, media):
     driver1.get(url)
     print(url)
     base.time.sleep(1)
     all_img_a = driver1.find_elements(By.XPATH, '//div[@class="contentme"]/a/img')
     print(len(all_img_a))
+
     for one_img in all_img_a:
         print(one_img.get_attribute('src'))
-        base.send_photo(base.chat_id_image, one_img.get_attribute('src'))
+        # base.send_photo(base.chat_id_image, one_img.get_attribute('src'))
+        media.append(one_img.get_attribute('src'))
+
     try:
         a = driver1.find_element(By.XPATH, '//a[@class="pagination-link"][text()="Next >"]')
         [url_next] = [a.get_attribute('href')]
-        getNungvlPageImage(driver1, url_next)
+        media = getNungvlPageImage(driver1, url_next, media)
+        return media
     except Exception as e:
-        pass
+        return media
 
 
 def Lifeismoney():
@@ -312,12 +323,9 @@ def Lifeismoney():
                     driver1.get(url)
                     driver1.get_screenshot_as_file("python_ptt.png")
                     ouo_url = base.shotUrl(url)
-                    print("111")
                     with open("python_ptt.png", 'rb') as photo_file:
                         base.send_photo(base.chat_id_money, photo_file, '<a href="' + ouo_url + '">' + title + '</a>', True)
-                    print("222")
                 except Exception as e:
-                    print("000 111")
                     print(e)
                 driver1.close()
 

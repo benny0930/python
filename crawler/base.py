@@ -1,4 +1,4 @@
-import telegram
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -9,6 +9,8 @@ import requests
 import os
 import chromedriver_autoinstaller as chromedriver
 import urllib3
+import telegram
+from telegram import InputMediaPhoto, InputMediaVideo, InputMediaDocument, InputMediaAudio, InputMediaAnimation
 
 urllib3.disable_warnings()
 
@@ -138,6 +140,27 @@ def send_photo(_chat_id, _file_opened, _caption="", isPhoto=False):
     # resp = requests.post(api_url + method, params)
     # return resp
 
+
+def send_media_group(_chat_id, _media=None):
+    if _media is not None and len(_media) > 0:
+        images = []
+        for key in _media:
+            val = key.rsplit('.', 1)[1]
+            if val == 'gif':
+                # Send a gif
+                print("GIF : " + key)
+                # images.append(InputMediaDocument(key))
+                bot.sendDocument(chat_id=_chat_id, document=key, caption="", parse_mode='html')
+            else:
+                # Send a Picture
+                print("Picture : " + key)
+                images.append(InputMediaPhoto(key))
+
+            if len(images)==9:
+                bot.send_media_group(chat_id=_chat_id, media=images)
+                images = []
+        if len(images) > 0:
+            bot.send_media_group(chat_id=_chat_id, media=images)
 
 def shotUrl(_url):
     # return "http://ouo.io/qs/K7YG4nn8?s="+_url
