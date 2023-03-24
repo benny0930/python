@@ -28,16 +28,22 @@ def start(_base, _db, index=0):
         [id, title, is_active, val] = results[0]
         if is_active == 'Y' and index % int(val) == 0:
             t = threading.Thread(target=Beauty, args=())
+            print("---------------")
+            print("Beauty Start")
             t.start()  # 開始
+            t.join(600)
 
         # https://nungvl.net/
         title = 'Nungvl'
         results = db.select(" SELECT id, title, is_active, val FROM fa_is_open WHERE `title` = '%s'" % (title))
         [id, title, is_active, val] = results[0]
         if is_active == 'Y' and index % int(val) == 0:
+            print("---------------")
+            print("Nungvl Start")
             # base.sendTG(base.chat_id_test, 'Nungvl Start')
             t = threading.Thread(target=Nungvl, args=())
             t.start()  # 開始
+            t.join(600)
 
         # http://www.playno1.com/portal.php?mod=list&catid=78
         # title = 'Playno1'
@@ -53,8 +59,11 @@ def start(_base, _db, index=0):
         results = db.select(" SELECT id, title, is_active, val FROM fa_is_open WHERE `title` = '%s'" % (title))
         [id, title, is_active, val] = results[0]
         if is_active == 'Y' and index % int(val) == 0:
+            print("---------------")
+            print("Lifeismoney Start")
             t = threading.Thread(target=Lifeismoney, args=())
             t.start()  # 開始
+            t.join(600)
 
 
     except Exception as e:

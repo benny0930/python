@@ -1,8 +1,3 @@
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from inputimeout import inputimeout, TimeoutOccurred
 import time
 import db
 import requests
@@ -10,7 +5,18 @@ import os
 import chromedriver_autoinstaller as chromedriver
 import urllib3
 import telegram
-from telegram import InputMediaPhoto, InputMediaVideo, InputMediaDocument, InputMediaAudio, InputMediaAnimation
+import hashlib
+import traceback
+import sys
+import re
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from inputimeout import inputimeout, TimeoutOccurred
+from PIL import Image
+from io import BytesIO
+from telegram import InputMediaPhoto
 
 urllib3.disable_warnings()
 
@@ -93,8 +99,21 @@ def api_get(_url, _params):
     return r.json()
 
 
-def sendTG(_chat_id, _msg):
-    bot.sendMessage(chat_id=_chat_id, text=_msg, parse_mode='html')
+def sendTG(_chat_id, _msg, index=0):
+    try:
+        bot.sendMessage(chat_id=_chat_id, text=_msg, parse_mode='html')
+    except Exception as e:
+        print(str(e))
+        try:
+            if index < 3 and "Retry in" in str(e):
+                index_new = index + 1
+                numbers = [int(n) for n in re.findall('\d+', str(e))]
+                print("sleep " + str(numbers[0]) + " s")
+                time.sleep(numbers[0])
+                sendTG(_chat_id, _msg, index_new)
+        except:
+            pass
+
     """
     Markdown 語法範例
     *粗體文字*
@@ -130,10 +149,12 @@ def send_photo(_chat_id, _file_opened, _caption="", isPhoto=False):
         val = _file_opened.rsplit('.', 1)[1]
     if val == 'gif':
         # Send a gif
-        bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
+        # bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
+        sendDocument(_chat_id, _file_opened, _caption)
     else:
         # Send a Picture
-        bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
+        sendPhoto(_chat_id, _file_opened, _caption)
+        # bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
     # api_url = 'https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/'
     # method = "sendPhoto"
     # params = {'chat_id': chat_id , 'photo': file_opened}
@@ -143,25 +164,35 @@ def send_photo(_chat_id, _file_opened, _caption="", isPhoto=False):
 
 def send_media_group(_chat_id, _media=None):
     if _media is not None and len(_media) > 0:
+        print(len(_media))
         images = []
-        for key in _media:
-            val = key.rsplit('.', 1)[1]
+        image_names = []
+        for url_one in _media:
+            val = url_one.rsplit('.', 1)[1]
             if val == 'gif':
                 # Send a gif
-                print("GIF : " + key)
+                print("GIF : " + url_one)
                 # images.append(InputMediaDocument(key))
-                bot.sendDocument(chat_id=_chat_id, document=key, caption="", parse_mode='html')
+                # bot.sendDocument(chat_id=_chat_id, document=url_one, caption="", parse_mode='html')
+                sendDocument(_chat_id, url_one, "")
             else:
                 # Send a Picture
-                print("Picture : " + key)
-                images.append(InputMediaPhoto(key))
-
+                print("Picture : " + url_one)
+                if not os.path.exists('images'):
+                    os.makedirs('images')
+                image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+                check_image_format(url_one,image_name)
+                image_names.append(image_name)
+                image1 = open(image_name, 'rb')
+                images.append(InputMediaPhoto(image1))
+                image1.close()
             if len(images)==9:
-                bot.send_media_group(chat_id=_chat_id, media=images)
+                sendMediaGroup(_chat_id, images)
                 images = []
         if len(images) > 0:
-            bot.send_media_group(chat_id=_chat_id, media=images)
-
+            sendMediaGroup(_chat_id, images)
+        for name_one in image_names:
+            remove_image(name_one)
 def shotUrl(_url):
     # return "http://ouo.io/qs/K7YG4nn8?s="+_url
 
@@ -191,3 +222,70 @@ def broadcast():
     for result in results:
         strLifeismoney += '<a href="' + shotUrl(result[1]) + '">' + result[0] + '</a>\n'
     sendTG(chat_id_money, strLifeismoney)
+
+def sendMediaGroup(_chat_id, _images, index = 0):
+    try:
+        print("發送數量：" + str(len(_images)))
+        bot.send_media_group(chat_id=_chat_id, media=_images)
+    except Exception as e:
+        print(str(e))
+        try:
+            if index < 3 and "Retry in" in str(e):
+                index_new = index + 1
+                numbers = [int(n) for n in re.findall('\d+', str(e))]
+                print("sleep " + str(numbers[0]) + " s")
+                time.sleep(numbers[0])
+                sendMediaGroup(_chat_id, _images, index_new)
+        except:
+            pass
+
+
+def sendDocument(_chat_id, _file_opened, _caption, index = 0):
+    try:
+        bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
+    except Exception as e:
+        print(str(e))
+        try:
+            if index < 3 and "Retry in" in str(e):
+                index_new = index + 1
+                numbers = [int(n) for n in re.findall('\d+', str(e))]
+                print("sleep " + str(numbers[0]) + " s")
+                time.sleep(numbers[0])
+                sendDocument(_chat_id, _file_opened, _caption, index_new)
+        except:
+            pass
+
+def sendPhoto(_chat_id, _file_opened, _caption, index = 0):
+    try:
+        bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
+    except Exception as e:
+        print(str(e))
+        try:
+            if index < 3 and "Retry in" in str(e):
+                index_new = index + 1
+                numbers = [int(n) for n in re.findall('\d+', str(e))]
+                print("sleep " + str(numbers[0]) + " s")
+                time.sleep(numbers[0])
+                sendPhoto(_chat_id, _file_opened, _caption, index_new)
+        except:
+            pass
+
+def check_image_format(url, name):
+    response = requests.get(url)
+
+    # 将图片转换为 JPG 格式
+    img = Image.open(BytesIO(response.content))
+    img = img.convert('RGB')
+
+    # 保存图片为 JPG 格式
+    img.save(name)
+
+
+def remove_image(name_one):
+    # print("刪除圖片 : " + name_one)
+    try:
+        os.remove(name_one)
+    except Exception as e:
+        print(e)
+        time.sleep(1)
+        remove_image(name_one)
