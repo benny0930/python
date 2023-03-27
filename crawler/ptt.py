@@ -121,13 +121,9 @@ def Beauty():
     driver.add_cookie({'name': 'over18', 'value': '1'})
     driver.get('https://www.ptt.cc/bbs/Beauty/index.html')
     all_a = driver.find_elements(By.XPATH, '//div[@class="r-ent"]/div[@class="title"]/a')
-    driver.close()
-    driver.quit()
     print(len(all_a))
-
     try:
         for a in all_a:
-
             [url, title] = [a.get_attribute('href'), a.text]
             print([url, title])
 
@@ -179,6 +175,8 @@ def Beauty():
                 print('已存在')
     except Exception as e:
         print(e)
+    driver.close()
+    driver.quit()
 
 
 
@@ -186,8 +184,6 @@ def Nungvl():
     driver = base.defaultChrome()
     driver.get('https://nungvl.net/')
     all_a = driver.find_elements(By.XPATH, '//h2/a[@class="item-link"]')
-    driver.close()
-    driver.quit()
     print(len(all_a))
     try:
         for a in all_a:
@@ -220,7 +216,8 @@ def Nungvl():
                 print('已存在')
     except Exception as e:
         print(e)
-
+    driver.close()
+    driver.quit()
 
 def Playno1():
     driver = base.defaultChrome()
@@ -229,8 +226,6 @@ def Playno1():
     a[0].click()
     base.time.sleep(2)
     all_a = driver.find_elements(By.XPATH, '//div[@class="fire_float"]/ul/li/h3/a')
-    driver.close()
-    driver.quit()
     print(len(all_a))
     try:
         for a in all_a:
@@ -279,8 +274,8 @@ def Playno1():
                 print('已存在')
     except Exception as e:
         print(e)
-
     driver.close()
+    driver.quit()
 
 
 def getNungvlPageImage(driver1, url, media):
@@ -310,8 +305,6 @@ def Lifeismoney():
     driver.add_cookie({'name': 'over18', 'value': '1'})
     driver.get('https://www.ptt.cc/bbs/Lifeismoney/index.html')
     all_a = driver.find_elements(By.XPATH, '//div[@class="r-ent"]/div[@class="title"]/a')
-    driver.close()
-    driver.quit()
     print(len(all_a))
     try:
         for a in all_a:
@@ -348,4 +341,5 @@ def Lifeismoney():
                 print('已存在')
     except Exception as e:
         base.sendTG(base.chat_id_test, str(e))
-
+    driver.close()
+    driver.quit()

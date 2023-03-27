@@ -106,9 +106,8 @@ def baozimhKeep():
                 if driver:
                     driver.close()
                 base.sendTG(base.chat_id_test, str(e))
-
-    print()
     driver.close()
+    driver.quit()
 
 
 def baozimh(id, name, url, new_episode):
@@ -118,7 +117,6 @@ def baozimh(id, name, url, new_episode):
     last_episode = driver.find_element(
         By.XPATH, '//div[@class="supporting-text mt-2"]/div[2]/span/a').text
     # print('id : ' + str(id))
-    driver.close()
     print('name : ' + name + ' / last_episode : ' +
           last_episode + ' / new_episode : ' + new_episode)
     if last_episode != new_episode and last_episode != '':
@@ -128,7 +126,8 @@ def baozimh(id, name, url, new_episode):
     else:
         db.insert(" UPDATE `fa_comic` SET  createtime= UNIX_TIMESTAMP(NOW()) WHERE  `id`='%s' "
                   % (str(id)))
-
+    driver.close()
+    driver.quit()
 
 def cocomanga(id, name, url, new_episode):
     driver = False
@@ -141,6 +140,7 @@ def cocomanga(id, name, url, new_episode):
             print(h1)
             if(h1=='请用正常浏览器观看，如果觉得是个意外，请反馈'):
                 driver.close()
+                driver.quit()
                 return
         except Exception as e:
             pass
@@ -149,7 +149,6 @@ def cocomanga(id, name, url, new_episode):
         last_episode = driver.find_element(
             By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[4]/a').text
         # print('id : ' + str(id))
-        driver.close()
         print('name : ' + name + ' / last_episode : ' +
             last_episode + ' / new_episode : ' + new_episode)
         if last_episode != new_episode:
@@ -159,7 +158,10 @@ def cocomanga(id, name, url, new_episode):
         else:
             db.insert(" UPDATE `fa_comic` SET  createtime= UNIX_TIMESTAMP(NOW()) WHERE  `id`='%s' "
                     % (str(id)))
+        driver.close()
+        driver.quit()
     except Exception as e:
         base.sendTG(base.chat_id_test, str(e))
         if driver:
             driver.close()
+            driver.quit()
