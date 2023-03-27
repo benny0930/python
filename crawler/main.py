@@ -19,8 +19,8 @@ import threading
 #     exit()
 
 
-t = threading.Thread(target=KPythonBot.start, args=())
-t.start()  # 開始
+# t = threading.Thread(target=KPythonBot.start, args=())
+# t.start()  # 開始
 
 isLoop = True
 base.set()
@@ -35,8 +35,8 @@ while isLoop:
         except Exception as e:
             print(e)
 
-        if index % 240 == 0:
-            base.broadcast()
+        # if index % 240 == 0:
+        #     base.broadcast()
 
         # autoShotUrl.start(base, db)
 
@@ -53,7 +53,11 @@ while isLoop:
             # actor.start(base, db)
             t = threading.Thread(target=actor.start, args=(base, db))
             t.start()  # 開始
-        
+
+        if base.sleep_sec > 0:
+            print("BOT 等待時間:" + str(base.sleep_sec))
+            base.time.sleep(base.sleep_sec)
+
         if base.reciprocal(6):
             index = 0
         else:

@@ -63,7 +63,7 @@ def start(_base, _db, index=0):
             print("Lifeismoney Start")
             t = threading.Thread(target=Lifeismoney, args=())
             t.start()  # 開始
-            t.join(600)
+            t.join(600*4)
 
 
     except Exception as e:
@@ -120,9 +120,11 @@ def Beauty():
     driver.get('https://www.ptt.cc/bbs/Beauty/index.html')
     driver.add_cookie({'name': 'over18', 'value': '1'})
     driver.get('https://www.ptt.cc/bbs/Beauty/index.html')
-
     all_a = driver.find_elements(By.XPATH, '//div[@class="r-ent"]/div[@class="title"]/a')
+    driver.close()
+    driver.quit()
     print(len(all_a))
+
     try:
         for a in all_a:
 
@@ -148,6 +150,7 @@ def Beauty():
             results = db.select(
                 " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
+                media = []
                 driver1 = base.defaultChrome()
                 try:
                     print("-----")
@@ -164,32 +167,27 @@ def Beauty():
                     driver1.add_cookie({'name': 'over18', 'value': '1'})
                     driver1.get(url)
                     all_one_a = driver1.find_elements(By.XPATH, '//div[@id="main-content"]/a')
-
-                    media = []
                     for one_a in all_one_a:
                         print(one_a.get_attribute('href'))
-                        # base.send_photo(base.chat_id_image, one_a.get_attribute('href'))
                         media.append(one_a.get_attribute('href'))
-                    base.send_media_group(base.chat_id_image, media)
-
                 except Exception as e:
                     print(e)
-
                 driver1.close()
+                driver1.quit()
+                base.send_media_group(base.chat_id_image, media)
             else:
                 print('已存在')
-
     except Exception as e:
         print(e)
 
-    driver.close()
 
 
 def Nungvl():
     driver = base.defaultChrome()
     driver.get('https://nungvl.net/')
-
     all_a = driver.find_elements(By.XPATH, '//h2/a[@class="item-link"]')
+    driver.close()
+    driver.quit()
     print(len(all_a))
     try:
         for a in all_a:
@@ -200,6 +198,7 @@ def Nungvl():
             results = db.select(
                 " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
+                media = []
                 driver1 = base.defaultChrome()
                 try:
                     print("-----")
@@ -211,17 +210,16 @@ def Nungvl():
                     'Beauty', url, title)
                     if not base.isTest:
                         db.insert(sql)
-                    media = getNungvlPageImage(driver1, url, [])
-                    base.send_media_group(base.chat_id_image, media)
+                    media = getNungvlPageImage(driver1, url, media)
                 except Exception as e:
                     print(e)
                 driver1.close()
+                driver1.quit()
+                base.send_media_group(base.chat_id_image, media)
             else:
                 print('已存在')
     except Exception as e:
         print(e)
-
-    driver.close()
 
 
 def Playno1():
@@ -230,8 +228,9 @@ def Playno1():
     a = driver.find_elements(By.XPATH, '//span[@class="ui-button-text"]/..')
     a[0].click()
     base.time.sleep(2)
-
     all_a = driver.find_elements(By.XPATH, '//div[@class="fire_float"]/ul/li/h3/a')
+    driver.close()
+    driver.quit()
     print(len(all_a))
     try:
         for a in all_a:
@@ -242,6 +241,7 @@ def Playno1():
             results = db.select(
                 " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
+                media = []
                 driver1 = base.defaultChrome()
                 try:
                     print("-----")
@@ -262,7 +262,7 @@ def Playno1():
                     base.time.sleep(2)
                     all_img_a = driver1.find_elements(By.XPATH, '//img[@onload="thumbImg(this)"]')
                     print(len(all_img_a))
-                    media = []
+
                     for one_img in all_img_a:
                         print(one_img.get_attribute('src'))
                         try:
@@ -270,11 +270,11 @@ def Playno1():
                         except:
                             # base.send_photo(base.chat_id_image, one_img.get_attribute('src'))
                             media.append(one_img.get_attribute('src'))
-                    base.send_media_group(base.chat_id_image, media)
-
+                    driver1.close()
+                    driver1.quit()
                 except Exception as e:
                     print(e)
-                driver1.close()
+                base.send_media_group(base.chat_id_image, media)
             else:
                 print('已存在')
     except Exception as e:
@@ -309,17 +309,23 @@ def Lifeismoney():
     driver.get('https://www.ptt.cc/bbs/Lifeismoney/index.html')
     driver.add_cookie({'name': 'over18', 'value': '1'})
     driver.get('https://www.ptt.cc/bbs/Lifeismoney/index.html')
-
     all_a = driver.find_elements(By.XPATH, '//div[@class="r-ent"]/div[@class="title"]/a')
+    driver.close()
+    driver.quit()
     print(len(all_a))
-
     try:
         for a in all_a:
+
+            [url, title] = [a.get_attribute('href'), a.text]
+            print([url, title])
+
             if a.text.find('公告') >= 0:
+                print("跳過")
                 continue
             if a.text.find('本文已被刪除') >= 0:
+                print("跳過")
                 continue
-            [url, title] = [a.get_attribute('href'), a.text]
+
             results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
                 sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % ('Lifeismoney', url, title)
@@ -337,9 +343,9 @@ def Lifeismoney():
                 except Exception as e:
                     print(e)
                 driver1.close()
-
-
+                driver1.quit()
+            else:
+                print('已存在')
     except Exception as e:
         base.sendTG(base.chat_id_test, str(e))
 
-    driver.close()

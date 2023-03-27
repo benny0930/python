@@ -1,17 +1,17 @@
 
-import crawler.stock as stock
-import sys, os
+import requests
+
+proxies = {
+  "http": "183.233.96.44:33080",
+  "https": "183.233.96.44:33080",
+}
 
 
-try:
-    # aStockInfo = stock.start('0052')
-    aStockInfo = stock.start('6488')
-    print(aStockInfo)
-
-    # for key in aStockInfo:
-    #     print(key + " = " + aStockInfo[key][0])
-    #     exit()
-except Exception as e:
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    print(exc_type, fname, exc_tb.tb_lineno)
+# 檢查IP-------------------------------------------------------------------
+ip = requests.get('https://api.ipify.org', proxies=proxies, timeout=10, verify=False).text
+print("IP :")
+print(ip)
+# if ip == "61.61.91.28":
+#     print('要換IP!!!!!')
+#     # base.time.sleep(30)
+#     exit()

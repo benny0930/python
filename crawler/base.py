@@ -27,7 +27,7 @@ isShowChrome = "Y"
 chat_id_test = "-1001911277875"
 chat_id_image = "-1001771451912"  # 正式
 chat_id_money = "-1001912123757"  # 正式
-
+sleep_sec=0
 
 # chat_id_image = chat_id_test
 
@@ -100,6 +100,7 @@ def api_get(_url, _params):
 
 
 def sendTG(_chat_id, _msg, index=0):
+    global sleep_sec
     try:
         bot.sendMessage(chat_id=_chat_id, text=_msg, parse_mode='html')
     except Exception as e:
@@ -109,7 +110,9 @@ def sendTG(_chat_id, _msg, index=0):
                 index_new = index + 1
                 numbers = [int(n) for n in re.findall('\d+', str(e))]
                 print("sleep " + str(numbers[0]) + " s")
+                sleep_sec = numbers[0]
                 time.sleep(numbers[0])
+                sleep_sec = 0
                 sendTG(_chat_id, _msg, index_new)
         except:
             pass
@@ -206,7 +209,7 @@ def broadcast():
 
     str += '<b>友站鏈接</b><pre>歡迎您的加入</pre>'
     str += '<a href="https://t.me/KPTTBeauty">正妹圖片分享</a>\n'
-    str += '<a href="https://t.me/KPTTMoney">省錢好康情報站</a>\n'
+    # str += '<a href="https://t.me/KPTTMoney">省錢好康情報站</a>\n'
     str += '<pre>  </pre>'
 
     strBeauty = str + '<pre><b>文章回顧：</b></pre>'
@@ -216,14 +219,15 @@ def broadcast():
         strBeauty += '<a href="' + shotUrl(result[1]) + '">' + result[0] + '</a>\n'
     sendTG(chat_id_image, strBeauty)
 
-    strLifeismoney = str + '<pre><b>文章回顧：</b></pre>'
-    name = 'Lifeismoney'
-    results = db.select("SELECT title, url FROM fa_ptt WHERE `name` = '%s' ORDER BY createtime DESC LIMIT 6" % (name))
-    for result in results:
-        strLifeismoney += '<a href="' + shotUrl(result[1]) + '">' + result[0] + '</a>\n'
-    sendTG(chat_id_money, strLifeismoney)
+    # strLifeismoney = str + '<pre><b>文章回顧：</b></pre>'
+    # name = 'Lifeismoney'
+    # results = db.select("SELECT title, url FROM fa_ptt WHERE `name` = '%s' ORDER BY createtime DESC LIMIT 6" % (name))
+    # for result in results:
+    #     strLifeismoney += '<a href="' + shotUrl(result[1]) + '">' + result[0] + '</a>\n'
+    # sendTG(chat_id_money, strLifeismoney)
 
 def sendMediaGroup(_chat_id, _images, index = 0):
+    global sleep_sec
     try:
         print("發送數量：" + str(len(_images)))
         bot.send_media_group(chat_id=_chat_id, media=_images)
@@ -234,13 +238,16 @@ def sendMediaGroup(_chat_id, _images, index = 0):
                 index_new = index + 1
                 numbers = [int(n) for n in re.findall('\d+', str(e))]
                 print("sleep " + str(numbers[0]) + " s")
+                sleep_sec = numbers[0]
                 time.sleep(numbers[0])
+                sleep_sec = 0
                 sendMediaGroup(_chat_id, _images, index_new)
         except:
             pass
 
 
 def sendDocument(_chat_id, _file_opened, _caption, index = 0):
+    global sleep_sec
     try:
         bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
     except Exception as e:
@@ -250,12 +257,15 @@ def sendDocument(_chat_id, _file_opened, _caption, index = 0):
                 index_new = index + 1
                 numbers = [int(n) for n in re.findall('\d+', str(e))]
                 print("sleep " + str(numbers[0]) + " s")
+                sleep_sec = numbers[0]
                 time.sleep(numbers[0])
+                sleep_sec = 0
                 sendDocument(_chat_id, _file_opened, _caption, index_new)
         except:
             pass
 
 def sendPhoto(_chat_id, _file_opened, _caption, index = 0):
+    global sleep_sec
     try:
         bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
     except Exception as e:
@@ -265,7 +275,9 @@ def sendPhoto(_chat_id, _file_opened, _caption, index = 0):
                 index_new = index + 1
                 numbers = [int(n) for n in re.findall('\d+', str(e))]
                 print("sleep " + str(numbers[0]) + " s")
+                sleep_sec = numbers[0]
                 time.sleep(numbers[0])
+                sleep_sec = 0
                 sendPhoto(_chat_id, _file_opened, _caption, index_new)
         except:
             pass
