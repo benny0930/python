@@ -18,9 +18,12 @@ import threading
 #     # base.time.sleep(30)
 #     exit()
 
+# try:
+#     t = threading.Thread(target=KPythonBot.start, args=())
+#     t.start()  # 開始
+# except Exception as e:
+#     print(e)
 
-# t = threading.Thread(target=KPythonBot.start, args=())
-# t.start()  # 開始
 
 isLoop = True
 base.set()
@@ -31,7 +34,9 @@ while isLoop:
     print('index = ' + str(index))
     try:
         try:
-            base.defaultChrome(True)
+            driver = base.defaultChrome(True)
+            driver.close()
+            driver.quit()
         except Exception as e:
             print(e)
 
@@ -47,12 +52,18 @@ while isLoop:
         # 一小時一次影片
         if index % 60 == 0:
             comic.start(base, db)
-            t = threading.Thread(target=comic.start, args=(base, db))
-            t.start()  # 開始
+            # t = threading.Thread(target=comic.start, args=(base, db))
+            # print("---------------")
+            # print("Comic Start")
+            # t.start()  # 開始
+            # t.join(600)
             # base.sendTG(base.chat_id_test, '開始更新')
-            # actor.start(base, db)
-            t = threading.Thread(target=actor.start, args=(base, db))
-            t.start()  # 開始
+            actor.start(base, db)
+            # t = threading.Thread(target=actor.start, args=(base, db))
+            # print("---------------")
+            # print("Actor Start")
+            # t.start()  # 開始
+            # t.join(600)
 
         if base.sleep_sec > 0:
             print("BOT 等待時間:" + str(base.sleep_sec))

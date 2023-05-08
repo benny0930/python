@@ -9,6 +9,7 @@ import hashlib
 import traceback
 import sys
 import re
+import threading
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -25,10 +26,10 @@ isTest = False
 chrome_version = ''
 isShowChrome = "Y"
 chat_id_test = "-1001911277875"
-chat_id_image = "-1001771451912"  # 正式
-chat_id_money = "-1001912123757"  # 正式
+chat_id_image = "-1001932657196"  # 正式
+chat_id_money = "-1001647881084"  # 正式
 sleep_sec=0
-
+only_driver = None
 # chat_id_image = chat_id_test
 
 
@@ -50,6 +51,8 @@ def defaultChrome(is_check_version=False):
     chrome_options.add_argument(
         f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
     chrome_options.add_argument('enable-logging')
+    chrome_options.add_argument("--disable-blink-features")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     prefs = {'profile.managed_default_content_settings.images': 2}
     chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
@@ -57,6 +60,7 @@ def defaultChrome(is_check_version=False):
     if is_check_version or chrome_version == "":
         driver = webdriver.Chrome(options=chrome_options)  # 套用設定
         chrome_version = driver.capabilities['browserVersion'].split(".")[0]
+        driver.close()
         driver.quit()
         print('chrome_version : ' + chrome_version)
     if (os.path.exists('./' + chrome_version)):
@@ -65,7 +69,18 @@ def defaultChrome(is_check_version=False):
         service = Service('./chromedriver')
     # driver.set_page_load_timeout(30)
     driver = webdriver.Chrome(service=service, options=chrome_options)  # 套用設定
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": """
+        Object.defineProperty(navigator, 'webdriver', {
+          get: () => undefined
+        })
+      """
+    })
     driver.minimize_window()
+
+    t = threading.Thread(target=closeDriver, args=(driver, ))
+    t.start()  # 開始
+
     return driver
 
 
@@ -197,6 +212,7 @@ def send_media_group(_chat_id, _media=None):
         for name_one in image_names:
             remove_image(name_one)
 def shotUrl(_url):
+    return _url
     # return "http://ouo.io/qs/K7YG4nn8?s="+_url
 
     "http://ouo.io/api/K7YG4nn8?s=yourdestinationlink.com"
@@ -301,3 +317,22 @@ def remove_image(name_one):
         print(e)
         time.sleep(1)
         remove_image(name_one)
+
+def closeDriver(driver):
+    try:
+        object_existed = False
+        time.sleep(120) # 2分鐘後檢查瀏覽器是否關閉
+        if driver is not None:
+            try:
+                driver.execute_script('javascript:void(0);')
+                object_existed = True
+            except:
+                # webdriver要求浏览器执行Javascript出现异常
+                try:
+                    driver.quit()
+                finally:
+                    driver = None
+            finally:
+                pass
+    except TimeoutOccurred:
+        pass
