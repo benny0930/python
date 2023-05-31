@@ -74,11 +74,13 @@ while isLoop:
         else:
             index += 1
 
-        # if index > 59:
-        #     index = 0
+        if index >= 600:
+            index = 0
+
+        gc.collect()
 
     except Exception as e:
         print(e)
         base.sendTG(base.chat_id_test, str(e))
-    gc.collect()
+
 

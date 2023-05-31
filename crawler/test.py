@@ -1,63 +1,23 @@
-import random
-import time
+from selenium.webdriver.common.by import By
 import base
-import db
-import gc
-import comic
-import ptt
-import actor
-import KPythonBot
-import requests
-import threading
-import autoShotUrl
-import socket
-import json
-import socketio
+media = []
+driver1 = base.defaultChrome()
+try:
+    print("-----")
 
-sio = socketio.Client()
-event = 'my_event'
+    url = 'https://clickme.net/57143'
 
+    driver1.get(url)
 
-@sio.event()
-def my_response(data):
-    # handle the message
-    # sio.emit('my_event', {"cmd": "joinRoom", "roomId": 8888})
-    print(data)
+    all_one_a = driver1.find_elements(By.XPATH, '//div[@id="primary"]/article/p/img')
+    print(len(all_one_a))
+    for one_a in all_one_a:
+        print(one_a.get_attribute('src'))
+        media.append(one_a.get_attribute('src'))
+    print(media)
 
 
-
-@sio.event
-def connect():
-    print('Connected to server')
-    # sio.emit('login', {'account': 'test', 'password': 'Aa123123', 'bank_id': 5})
-
-
-@sio.event
-def server_response(data):
-    print('Server response:', data)
-
-
-@sio.event
-def message(data):
-    print('Message from server:', data)
-
-@sio.event
-def connect_error():
-    print("The connection failed!")
-
-
-@sio.event
-def disconnect():
-    print("I'm disconnected!")
-
-
-url = 'http://cf3_api.local:2021'
-# url = 'wss://kyastws.nettry.info'
-sio.connect(url, transports=["websocket"])
-print('my sid is', sio.sid)
-# time.sleep(3)
-# url = url.format(uid=uid, token=token)
-# sio.emit(event, {"cmd": "register", "userId": uid, "role": "T", "deviceVersion": "1.0","s_sid": sio.sid, "token": token})
-sio.emit('login', {'account': 'test', 'password': 'Aa123123', 'bank_id': 5})
-
-# time.sleep(3)
+except Exception as e:
+    print(e)
+driver1.close()
+driver1.quit()

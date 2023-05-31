@@ -322,17 +322,7 @@ def closeDriver(driver):
     try:
         object_existed = False
         time.sleep(120) # 2分鐘後檢查瀏覽器是否關閉
-        if driver is not None:
-            try:
-                driver.execute_script('javascript:void(0);')
-                object_existed = True
-            except:
-                # webdriver要求浏览器执行Javascript出现异常
-                try:
-                    driver.quit()
-                finally:
-                    driver = None
-            finally:
-                pass
-    except TimeoutOccurred:
-        pass
+        print("關閉瀏覽器")
+        driver.quit()
+    except Exception as e:
+        print(e)
