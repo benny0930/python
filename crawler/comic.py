@@ -2,6 +2,10 @@ import threading
 from selenium.webdriver.common.by import By
 
 # base = db = None
+def set(_base, _db):
+    global base, db
+    base = _base
+    db = _db
 
 
 def start(_base, _db):
@@ -11,13 +15,12 @@ def start(_base, _db):
         db = _db
         base.sendTG(base.chat_id_test, 'baozimhKeep Start')
         sql = "SELECT id, name , url , website, new_episode FROM fa_av_actor WHERE `active` LIKE 'Y' limit 1"  # test
-        sql = "SELECT id, name , url , website, new_episode FROM fa_comic WHERE `active` LIKE 'Y'"
+        sql = "SELECT id, name , url , website, new_episode FROM fa_comic WHERE `active` LIKE 'Y' AND `website` LIKE 'cocomanga' ORDER BY updatetime asc"
         results = db.select(sql)
 
         baozimhKeep()
         # t = threading.Thread(target=baozimhKeep, args=())
         # t.start()  # 開始
-        is_cocomanga = True
         for row in results:
             try:
                 print("-----------")
@@ -28,12 +31,12 @@ def start(_base, _db):
                     # baozimh(id, name, url, new_episode)
                     # t = threading.Thread(target=baozimh, args=(id, name, url, new_episode,))
                     # t.start()  # 開始
-                if website == 'cocomanga' and is_cocomanga:
-                    is_cocomanga = cocomanga(id, name, url, new_episode)
+                elif website == 'cocomanga':
+                    cocomanga(id, name, url, new_episode)
                     # t = threading.Thread(target=cocomanga, args=(
                     #     id, name, url, new_episode,))
                     # t.start()  # 開始
-                base.time.sleep(1)
+                base.time.sleep(2)
             except Exception as e:
                 base.sendTG(base.chat_id_test, name + " : " + str(e))
 

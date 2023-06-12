@@ -368,9 +368,14 @@ def ClickMe():
                         'ClickMe', url, title)
                     if not base.isTest:
                         db.insert(sql)
-
                     driver1.get(url)
-
+                    try:
+                        base.time.sleep(1)
+                        el_close = driver.find_element(By.XPATH, '//div[@id="society-close"]')
+                        el_close.click()
+                        base.time.sleep(1)
+                    except Exception as e:
+                        print(e)
                     all_one_a = driver1.find_elements(By.XPATH, '//div[@id="primary"]/article/p/img')
                     print(len(all_one_a))
                     for one_a in all_one_a:

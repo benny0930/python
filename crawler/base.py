@@ -28,8 +28,10 @@ isShowChrome = "Y"
 chat_id_test = "-1001911277875"
 chat_id_image = "-1001932657196"  # 正式
 chat_id_money = "-1001647881084"  # 正式
-sleep_sec=0
+sleep_sec = 0
 only_driver = None
+
+
 # chat_id_image = chat_id_test
 
 
@@ -45,17 +47,23 @@ def set(_isTest=False, _isChrome="Y"):
 def defaultChrome(is_check_version=False):
     global chrome_version
     chromedriver.install(cwd=True)
+
+    prefs = {'profile.managed_default_content_settings.images': 2}
+
     chrome_options = Options()
-    if isShowChrome != 'Y':
-        chrome_options.add_argument('--headless')  # 啟動Headless 無頭
+
     chrome_options.add_argument(
         f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
     chrome_options.add_argument('enable-logging')
     chrome_options.add_argument("--disable-blink-features")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    prefs = {'profile.managed_default_content_settings.images': 2}
-    chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
+
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+    chrome_options.add_experimental_option('prefs', prefs)
+
+    if isShowChrome != 'Y':
+        chrome_options.add_argument('--headless')  # 啟動Headless 無頭
 
     if is_check_version or chrome_version == "":
         driver = webdriver.Chrome(options=chrome_options)  # 套用設定
@@ -78,8 +86,8 @@ def defaultChrome(is_check_version=False):
     })
     driver.minimize_window()
 
-    t = threading.Thread(target=closeDriver, args=(driver, ))
-    t.start()  # 開始
+    # t = threading.Thread(target=closeDriver, args=(driver,))
+    # t.start()  # 開始
 
     return driver
 
@@ -186,31 +194,40 @@ def send_media_group(_chat_id, _media=None):
         images = []
         image_names = []
         for url_one in _media:
-            val = url_one.rsplit('.', 1)[1]
-            if val == 'gif':
-                # Send a gif
-                print("GIF : " + url_one)
-                # images.append(InputMediaDocument(key))
-                # bot.sendDocument(chat_id=_chat_id, document=url_one, caption="", parse_mode='html')
-                sendDocument(_chat_id, url_one, "")
-            else:
-                # Send a Picture
-                print("Picture : " + url_one)
-                if not os.path.exists('images'):
-                    os.makedirs('images')
-                image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
-                check_image_format(url_one,image_name)
-                image_names.append(image_name)
-                image1 = open(image_name, 'rb')
-                images.append(InputMediaPhoto(image1))
-                image1.close()
-            if len(images)==9:
-                sendMediaGroup(_chat_id, images)
-                images = []
+            try:
+                val = url_one.rsplit('.', 1)[1]
+                if val == 'gif':
+                    # Send a gif
+                    print("GIF : " + url_one)
+                    # images.append(InputMediaDocument(key))
+                    # bot.sendDocument(chat_id=_chat_id, document=url_one, caption="", parse_mode='html')
+                    sendDocument(_chat_id, url_one, "")
+                elif val == 'jpg':
+                    # Send a Picture
+                    print("Picture : " + url_one)
+                    if not os.path.exists('images'):
+                        os.makedirs('images')
+                    image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+                    check_image_format(url_one, image_name)
+                    image_names.append(image_name)
+                    image1 = open(image_name, 'rb')
+                    images.append(InputMediaPhoto(image1))
+                    image1.close()
+                else:
+                    sendTG(chat_id_image, url_one)
+
+                if len(images) == 9:
+                    sendMediaGroup(_chat_id, images)
+                    images = []
+            except:
+                pass
+
         if len(images) > 0:
             sendMediaGroup(_chat_id, images)
         for name_one in image_names:
             remove_image(name_one)
+
+
 def shotUrl(_url):
     return _url
     # return "http://ouo.io/qs/K7YG4nn8?s="+_url
@@ -242,7 +259,8 @@ def broadcast():
     #     strLifeismoney += '<a href="' + shotUrl(result[1]) + '">' + result[0] + '</a>\n'
     # sendTG(chat_id_money, strLifeismoney)
 
-def sendMediaGroup(_chat_id, _images, index = 0):
+
+def sendMediaGroup(_chat_id, _images, index=0):
     global sleep_sec
     try:
         print("發送數量：" + str(len(_images)))
@@ -262,7 +280,7 @@ def sendMediaGroup(_chat_id, _images, index = 0):
             pass
 
 
-def sendDocument(_chat_id, _file_opened, _caption, index = 0):
+def sendDocument(_chat_id, _file_opened, _caption, index=0):
     global sleep_sec
     try:
         bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
@@ -280,7 +298,8 @@ def sendDocument(_chat_id, _file_opened, _caption, index = 0):
         except:
             pass
 
-def sendPhoto(_chat_id, _file_opened, _caption, index = 0):
+
+def sendPhoto(_chat_id, _file_opened, _caption, index=0):
     global sleep_sec
     try:
         bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
@@ -297,6 +316,7 @@ def sendPhoto(_chat_id, _file_opened, _caption, index = 0):
                 sendPhoto(_chat_id, _file_opened, _caption, index_new)
         except:
             pass
+
 
 def check_image_format(url, name):
     response = requests.get(url)
@@ -318,10 +338,11 @@ def remove_image(name_one):
         time.sleep(1)
         remove_image(name_one)
 
+
 def closeDriver(driver):
     try:
         object_existed = False
-        time.sleep(120) # 2分鐘後檢查瀏覽器是否關閉
+        time.sleep(120)  # 2分鐘後檢查瀏覽器是否關閉
         print("關閉瀏覽器")
         driver.quit()
     except Exception as e:
