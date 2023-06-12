@@ -29,6 +29,8 @@ base.set()
 
 def loop_one_time(index):
     try:
+
+        index = int(index)
         try:
             driver = base.defaultChrome(True)
             driver.close()
@@ -36,30 +38,14 @@ def loop_one_time(index):
         except Exception as e:
             print(e)
 
-        # if index % 240 == 0:
-        #     base.broadcast()
-
-        # autoShotUrl.start(base, db)
-
         # 兩分鐘一次PTT
         ptt.start(base, db, index)
 
         # 一小時一次漫畫
         # 一小時一次影片
-        if int(index) % 60 == 0:
+        if index % 60 == 0:
             comic.start(base, db)
-            # t = threading.Thread(target=comic.start, args=(base, db))
-            # print("---------------")
-            # print("Comic Start")
-            # t.start()  # 開始
-            # t.join(600)
-            # base.sendTG(base.chat_id_test, '開始更新')
             actor.start(base, db)
-            # t = threading.Thread(target=actor.start, args=(base, db))
-            # print("---------------")
-            # print("Actor Start")
-            # t.start()  # 開始
-            # t.join(600)
 
         if base.sleep_sec > 0:
             print("BOT 等待時間:" + str(base.sleep_sec))
@@ -84,6 +70,7 @@ while isLoop:
         index += 1
     if index >= 600:
         index = 0
+        base.url = []
 
 
 

@@ -89,7 +89,7 @@ def start(_base, _db, index=0):
         [id, title, is_active, val] = results[0]
         if is_active == 'Y' and index % int(val) == 0:
             print("---------------")
-            print("forsale Start")
+            print("clickme Start")
             ClickMe()
 
     except Exception as e:
@@ -126,9 +126,14 @@ def Beauty():
                 print('跳過')
                 continue
 
+            if url in base.url:
+                print('已存在')
+                continue
+
             results = db.select(
                 " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
+                base.url.append(url)
                 media = []
                 driver1 = base.defaultChrome()
                 try:
@@ -190,8 +195,15 @@ def ptt_screenshot(_title, _url):
                 print("跳過")
                 continue
 
+            if url in base.url:
+                print('已存在')
+                continue
+
             results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
             if len(results) < 1:
+
+                base.url.append(url)
+
                 sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
                 _title, url, title)
                 if not base.isTest:

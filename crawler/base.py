@@ -30,6 +30,7 @@ chat_id_image = "-1001932657196"  # 正式
 chat_id_money = "-1001647881084"  # 正式
 sleep_sec = 0
 only_driver = None
+url = []
 
 
 # chat_id_image = chat_id_test
@@ -44,7 +45,7 @@ def set(_isTest=False, _isChrome="Y"):
         chat_id_money = chat_id_test  # 測試用
 
 
-def defaultChrome(is_check_version=False):
+def defaultChrome(is_check_version=False, is_use_proxy=False):
     global chrome_version
     chromedriver.install(cwd=True)
 
@@ -58,6 +59,11 @@ def defaultChrome(is_check_version=False):
     chrome_options.add_argument("--disable-blink-features")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument('--disable-gpu')  # 關閉GPU 避免某些系統或是網頁出錯
+
+    if is_use_proxy:
+        [proxy_ip, proxy_port] = getProxy()
+        if proxy_ip:
+            chrome_options.add_argument(f'--proxy-server={proxy_ip}:{proxy_port}')
 
     chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
     chrome_options.add_experimental_option('prefs', prefs)
@@ -347,3 +353,36 @@ def closeDriver(driver):
         driver.quit()
     except Exception as e:
         print(e)
+
+
+def getProxy():
+    try:
+        for i in range(10):
+            print("checkProxy:", i + 1)
+            [proxy_ip, proxy_port] = checkProxy()
+            if proxy_ip:
+                return [proxy_ip, proxy_port]
+        return [False, False]
+    except Exception as e:
+        print(e)
+    return [False, False]
+
+
+def checkProxy():
+    try:
+        results = db.select(
+            " SELECT id, ip, port FROM fa_proxy WHERE `is_active` = '%s' ORDER BY RAND() LIMIT 1" % ("1"))
+        [id, proxy_ip, proxy_port] = results[0]
+        print(f"getProxy - proxy_ip : {proxy_ip} , proxy_port : {proxy_port}")
+        proxy = {
+            'http': f'http://{proxy_ip}:{proxy_port}',
+            'https': f'http://{proxy_ip}:{proxy_port}'
+        }
+        ip = requests.get('https://api.ipify.org', proxies=proxy).text
+        return [proxy_ip, proxy_port]
+
+    except Exception:
+        print("proxy 失效、自動關閉")
+        sql = "UPDATE `homestead`.`fa_proxy` SET `is_active` = 0 WHERE `id` = '%s'" % (str(id))
+        db.insert(sql)
+        return [False, False]

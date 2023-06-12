@@ -1,6 +1,7 @@
 import threading
 from selenium.webdriver.common.by import By
 
+
 # base = db = None
 def set(_base, _db):
     global base, db
@@ -64,11 +65,11 @@ def baozimhKeep():
         page_index = 1
         print(len(pages))
         for page in pages:
-            print('頁面'+str(page_index))
+            print('頁面' + str(page_index))
             driver.find_element(
-                By.XPATH, '//ul[@class="pager"][1]/li['+str(page_index)+']').click()
+                By.XPATH, '//ul[@class="pager"][1]/li[' + str(page_index) + ']').click()
             if (page_index > 1):
-                print('切換頁面'+str(page_index))
+                print('切換頁面' + str(page_index))
                 base.time.sleep(4)
             base.time.sleep(1)
             page_index = page_index + 1
@@ -79,11 +80,13 @@ def baozimhKeep():
                 try:
                     print('------')
                     title = driver.find_element(
-                        By.XPATH, '//div[@class="bookshelf-items"]['+str(index)+']/div[@class="info"]/ul/li/h4/a').text
-                    url = driver.find_element(By.XPATH, '//div[@class="bookshelf-items"]['+str(
-                        index)+']/div[@class="info"]/ul/li/h4/a').get_attribute('href')
+                        By.XPATH,
+                        '//div[@class="bookshelf-items"][' + str(index) + ']/div[@class="info"]/ul/li/h4/a').text
+                    url = driver.find_element(By.XPATH, '//div[@class="bookshelf-items"][' + str(
+                        index) + ']/div[@class="info"]/ul/li/h4/a').get_attribute('href')
                     last_episode = driver.find_element(
-                        By.XPATH, '//div[@class="bookshelf-items"]['+str(index)+']/div[@class="info"]/ul/li[5]').text
+                        By.XPATH,
+                        '//div[@class="bookshelf-items"][' + str(index) + ']/div[@class="info"]/ul/li[5]').text
                     last_episode = last_episode.replace('最新章节: ', '')
                     index = index + 1
                     new_url = url.split("_")
@@ -96,16 +99,18 @@ def baozimhKeep():
                         [id, name, url, website, new_episode] = results[0]
                         print([id, name, url, website, new_episode])
                         if last_episode != new_episode:
-                            base.sendTG(base.chat_id_test, '漫畫更新:'+name+"-"+last_episode)
-                            db.insert(" UPDATE `fa_comic` SET `new_episode`='%s', updatetime= UNIX_TIMESTAMP(NOW()), createtime= UNIX_TIMESTAMP(NOW()), new='Y' WHERE  `id`='%s' "
-                                      % (last_episode, str(id)))
+                            base.sendTG(base.chat_id_test, '漫畫更新:' + name + "-" + last_episode)
+                            db.insert(
+                                " UPDATE `fa_comic` SET `new_episode`='%s', updatetime= UNIX_TIMESTAMP(NOW()), createtime= UNIX_TIMESTAMP(NOW()), new='Y' WHERE  `id`='%s' "
+                                % (last_episode, str(id)))
                         else:
                             db.insert(" UPDATE `fa_comic` SET  createtime= UNIX_TIMESTAMP(NOW()) WHERE  `id`='%s' "
                                       % (str(id)))
                     else:
-                        base.sendTG(base.chat_id_test, '漫畫新增:'+title+"-"+last_episode)
-                        db.insert("INSERT INTO `fa_comic` (`name`, `url`, `new_episode`, `createtime`, `updatetime`, `new`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()) , UNIX_TIMESTAMP(NOW()), 'Y')"
-                                  % (title, url, last_episode))
+                        base.sendTG(base.chat_id_test, '漫畫新增:' + title + "-" + last_episode)
+                        db.insert(
+                            "INSERT INTO `fa_comic` (`name`, `url`, `new_episode`, `createtime`, `updatetime`, `new`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()) , UNIX_TIMESTAMP(NOW()), 'Y')"
+                            % (title, url, last_episode))
                 except Exception as e:
                     base.sendTG(base.chat_id_test, str(e))
     except Exception as e:
@@ -125,9 +130,10 @@ def baozimh(id, name, url, new_episode):
         print('name : ' + name + ' / last_episode : ' +
               last_episode + ' / new_episode : ' + new_episode)
         if last_episode != new_episode and last_episode != '':
-            base.sendTG(base.chat_id_test, '漫畫更新:'+name+"-"+last_episode)
-            db.insert(" UPDATE `fa_comic` SET `new_episode`='%s', updatetime= UNIX_TIMESTAMP(NOW()), createtime= UNIX_TIMESTAMP(NOW()), new='Y' WHERE  `id`='%s' "
-                      % (last_episode, str(id)))
+            base.sendTG(base.chat_id_test, '漫畫更新:' + name + "-" + last_episode)
+            db.insert(
+                " UPDATE `fa_comic` SET `new_episode`='%s', updatetime= UNIX_TIMESTAMP(NOW()), createtime= UNIX_TIMESTAMP(NOW()), new='Y' WHERE  `id`='%s' "
+                % (last_episode, str(id)))
         else:
             db.insert(" UPDATE `fa_comic` SET  createtime= UNIX_TIMESTAMP(NOW()) WHERE  `id`='%s' "
                       % (str(id)))
@@ -136,36 +142,39 @@ def baozimh(id, name, url, new_episode):
     driver.close()
     driver.quit()
 
+
 def cocomanga(id, name, url, new_episode):
     is_next = True
-    driver = base.defaultChrome()
+    driver = base.defaultChrome(False, True)
     try:
         try:
             driver.get(url)
             base.time.sleep(5)
             h1 = driver.find_element(By.XPATH, '//center/h1[1]').text
             print(h1)
-            if(h1=='请用正常浏览器观看，如果觉得是个意外，请反馈'):
+            if (h1 == '请用正常浏览器观看，如果觉得是个意外，请反馈'):
                 is_next = False
                 pass
         except Exception as e:
             pass
 
-        if is_next :
+        if is_next:
             # base.reciprocal(1)
             last_episode = driver.find_element(
                 By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[4]/a').text
             # print('id : ' + str(id))
             print('name : ' + name + ' / last_episode : ' +
-                last_episode + ' / new_episode : ' + new_episode)
+                  last_episode + ' / new_episode : ' + new_episode)
             if last_episode != new_episode:
-                base.sendTG(base.chat_id_test, '漫畫更新:'+name+"-"+last_episode)
-                db.insert(" UPDATE `fa_comic` SET `new_episode`='%s', updatetime= UNIX_TIMESTAMP(NOW()), new='Y' WHERE  `id`='%s' "
-                        % (last_episode, str(id)))
+                base.sendTG(base.chat_id_test, '漫畫更新:' + name + "-" + last_episode)
+                db.insert(
+                    " UPDATE `fa_comic` SET `new_episode`='%s', updatetime= UNIX_TIMESTAMP(NOW()), new='Y' WHERE  `id`='%s' "
+                    % (last_episode, str(id)))
             else:
                 db.insert(" UPDATE `fa_comic` SET  createtime= UNIX_TIMESTAMP(NOW()) WHERE  `id`='%s' "
-                        % (str(id)))
+                          % (str(id)))
     except Exception as e:
-        base.sendTG(base.chat_id_test, str(e))
+        print(str(e))
+        # base.sendTG(base.chat_id_test, str(e))
     driver.close()
     driver.quit()
