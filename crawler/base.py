@@ -1,4 +1,6 @@
 import time
+from datetime import datetime
+
 import db
 import requests
 import os
@@ -99,10 +101,20 @@ def defaultChrome(is_check_version=False, is_use_proxy=False):
 
 
 def reciprocal(sec):
+    # 获取当前的日期和时间
+    now = datetime.now()
+
+    # 提取小时、分钟和秒
+    hour = now.hour
+    minute = now.minute
+    second = now.second
+
+    # 打印结果
     for x in range(sec):
         base_int = 10
         # print("倒數:"+str((sec-x)*base_int)+"秒")
         try:
+            print("現在時間：{}:{}:{}".format(hour, minute, second))
             inputimeout(prompt="倒數:" + str((sec - x) * base_int) + "秒、輸入" + ' enter 直接跳過倒數 :  ',
                         timeout=base_int)
             return True
@@ -360,6 +372,8 @@ def getProxy():
         for i in range(10):
             print("checkProxy:", i + 1)
             [proxy_ip, proxy_port] = checkProxy()
+            if proxy_ip == "no proxy":
+                return [False, False]
             if proxy_ip:
                 return [proxy_ip, proxy_port]
         return [False, False]
@@ -372,15 +386,16 @@ def checkProxy():
     try:
         results = db.select(
             " SELECT id, ip, port FROM fa_proxy WHERE `is_active` = '%s' ORDER BY RAND() LIMIT 1" % ("1"))
-        [id, proxy_ip, proxy_port] = results[0]
-        print(f"getProxy - proxy_ip : {proxy_ip} , proxy_port : {proxy_port}")
-        proxy = {
-            'http': f'http://{proxy_ip}:{proxy_port}',
-            'https': f'http://{proxy_ip}:{proxy_port}'
-        }
-        ip = requests.get('https://api.ipify.org', proxies=proxy).text
-        return [proxy_ip, proxy_port]
-
+        if len(results) > 0:
+            [id, proxy_ip, proxy_port] = results[0]
+            print(f"getProxy - proxy_ip : {proxy_ip} , proxy_port : {proxy_port}")
+            proxy = {
+                'http': f'http://{proxy_ip}:{proxy_port}',
+                'https': f'http://{proxy_ip}:{proxy_port}'
+            }
+            ip = requests.get('https://api.ipify.org', proxies=proxy).text
+            return [proxy_ip, proxy_port]
+        return ["no proxy", False]
     except Exception:
         print("proxy 失效、自動關閉")
         sql = "UPDATE `homestead`.`fa_proxy` SET `is_active` = 0 WHERE `id` = '%s'" % (str(id))

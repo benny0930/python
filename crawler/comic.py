@@ -3,6 +3,8 @@ from selenium.webdriver.common.by import By
 
 
 # base = db = None
+is_next = True
+
 def set(_base, _db):
     global base, db
     base = _base
@@ -10,7 +12,8 @@ def set(_base, _db):
 
 
 def start(_base, _db):
-    global base, db
+    global base, db, is_next
+    is_next = True
     try:
         base = _base
         db = _db
@@ -144,7 +147,7 @@ def baozimh(id, name, url, new_episode):
 
 
 def cocomanga(id, name, url, new_episode):
-    is_next = True
+    global is_next
     driver = base.defaultChrome(False, True)
     try:
         try:
