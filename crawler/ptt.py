@@ -1,4 +1,6 @@
 import threading
+import time
+
 from selenium.webdriver.common.by import By
 
 
@@ -14,6 +16,10 @@ def set(_base, _db):
 def start(_base, _db, index=0):
     set(_base, _db)
     try:
+
+        ClickMe18()
+        return
+
         # 看板 Beauty
         title = 'Beauty'
         results = db.select(" SELECT id, title, is_active, val FROM fa_is_open WHERE `title` = '%s'" % (title))
@@ -360,6 +366,61 @@ def ClickMe():
     all_a = driver.find_elements(By.XPATH, '//ul[@id="article-list"]/li/a')
     print(len(all_a))
     try:
+        for a in all_a:
+            [url, title] = [a.get_attribute('href'), a.text]
+            print([url, title])
+
+            results = db.select(
+                " SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (url))
+
+            if len(results) < 1:
+                media = []
+                driver1 = base.defaultChrome()
+                try:
+                    print("-----")
+                    print('ClickMe : ' + title + ' / ' + url)
+                    print("-----")
+                    ouo_url = base.shotUrl(url)
+                    base.sendTG(base.chat_id_image, '<a href="' + ouo_url + '">' + title + '</a>')
+                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES ('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
+                        'ClickMe', url, title)
+                    if not base.isTest:
+                        db.insert(sql)
+                    driver1.get(url)
+                    try:
+                        base.time.sleep(1)
+                        el_close = driver.find_element(By.XPATH, '//div[@id="society-close"]')
+                        el_close.click()
+                        base.time.sleep(1)
+                    except Exception as e:
+                        print(e)
+                    all_one_a = driver1.find_elements(By.XPATH, '//div[@id="primary"]/article/p/img')
+                    print(len(all_one_a))
+                    for one_a in all_one_a:
+                        print(one_a.get_attribute('src'))
+                        media.append(one_a.get_attribute('src'))
+                except Exception as e:
+                    print(e)
+                driver1.close()
+                driver1.quit()
+                base.send_media_group(base.chat_id_image, media)
+            else:
+                print('已存在')
+    except Exception as e:
+        print(e)
+    driver.close()
+    driver.quit()
+
+def ClickMe18():
+    driver = base.defaultChrome()
+    driver.get('https://r18.clickme.net/')
+    try:
+        time.sleep(3)
+        el_close = driver.find_element(By.XPATH, '//button[@id = "enter"]')
+        el_close.click()
+        time.sleep(3)
+        all_a = driver.find_elements(By.XPATH, '//ul[@id="newArticle"]/li/a')
+        print(len(all_a))
         for a in all_a:
             [url, title] = [a.get_attribute('href'), a.text]
             print([url, title])

@@ -20,7 +20,6 @@ from inputimeout import inputimeout, TimeoutOccurred
 from PIL import Image
 from io import BytesIO
 from telegram import InputMediaPhoto
-
 urllib3.disable_warnings()
 
 bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
@@ -28,6 +27,7 @@ isTest = False
 chrome_version = ''
 isShowChrome = "Y"
 chat_id_test = "-1001911277875"
+chat_id_test2 = "-4043790102"
 chat_id_image = "-1001932657196"  # 正式
 chat_id_money = "-1001647881084"  # 正式
 sleep_sec = 0
@@ -49,7 +49,6 @@ def set(_isTest=False, _isChrome="Y"):
 
 def defaultChrome(is_check_version=False, is_use_proxy=False):
     global chrome_version
-    chromedriver.install(cwd=True)
 
     prefs = {'profile.managed_default_content_settings.images': 2}
 
@@ -73,18 +72,15 @@ def defaultChrome(is_check_version=False, is_use_proxy=False):
     if isShowChrome != 'Y':
         chrome_options.add_argument('--headless')  # 啟動Headless 無頭
 
-    if is_check_version or chrome_version == "":
-        driver = webdriver.Chrome(options=chrome_options)  # 套用設定
-        chrome_version = driver.capabilities['browserVersion'].split(".")[0]
-        driver.close()
-        driver.quit()
-        print('chrome_version : ' + chrome_version)
-    if (os.path.exists('./' + chrome_version)):
-        service = Service('./' + chrome_version + '/chromedriver')
-    else:
-        service = Service('./chromedriver')
+    # if is_check_version or chrome_version == "":
+    #     driver = webdriver.Chrome(options=chrome_options)  # 套用設定
+    #     chrome_version = driver.capabilities['browserVersion'].split(".")[0]
+    #     driver.close()
+    #     driver.quit()
+    #     print('chrome_version : ' + chrome_version)
     # driver.set_page_load_timeout(30)
-    driver = webdriver.Chrome(service=service, options=chrome_options)  # 套用設定
+
+    driver = webdriver.Chrome(service=Service('../chromedriver'), options=chrome_options)  # 套用設定
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
         "source": """
         Object.defineProperty(navigator, 'webdriver', {
@@ -93,10 +89,6 @@ def defaultChrome(is_check_version=False, is_use_proxy=False):
       """
     })
     driver.minimize_window()
-
-    # t = threading.Thread(target=closeDriver, args=(driver,))
-    # t.start()  # 開始
-
     return driver
 
 
@@ -401,3 +393,11 @@ def checkProxy():
         sql = "UPDATE `homestead`.`fa_proxy` SET `is_active` = 0 WHERE `id` = '%s'" % (str(id))
         db.insert(sql)
         return [False, False]
+
+
+def is_valid_date(date_str, date_format):
+    try:
+        datetime.strptime(date_str, date_format)
+        return True
+    except ValueError:
+        return False

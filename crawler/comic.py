@@ -166,8 +166,15 @@ def cocomanga(id, name, url, new_episode):
             last_episode = driver.find_element(
                 By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[4]/a').text
             # print('id : ' + str(id))
-            print('name : ' + name + ' / last_episode : ' +
-                  last_episode + ' / new_episode : ' + new_episode)
+            print('name : ' + name + ' / last_episode : ' + last_episode + ' / new_episode : ' + new_episode)
+
+            format_string = "%Y-%m-%d"
+            if base.is_valid_date(last_episode, format_string):
+                last_episode = driver.find_element(
+                    By.XPATH, '//dd[@class="fed-deta-content fed-col-xs7 fed-col-sm8 fed-col-md10"]/ul/li[5]/a').text
+                # print('id : ' + str(id))
+                print('name : ' + name + ' / last_episode : ' + last_episode + ' / new_episode : ' + new_episode)
+
             if last_episode != new_episode:
                 base.sendTG(base.chat_id_test, '漫畫更新:' + name + "-" + last_episode)
                 db.insert(

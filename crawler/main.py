@@ -28,14 +28,6 @@ base.set()
 
 def loop_one_time_5():
     try:
-        try:
-            driver = base.defaultChrome(True)
-            driver.close()
-            driver.quit()
-        except Exception as e:
-            print(e)
-
-        # 兩分鐘一次PTT
         ptt.start(base, db)
         gc.collect()
     except Exception as e:
@@ -63,7 +55,7 @@ while isLoop:
         t1.start()
         t1.join()
 
-    if index % 60 == 0:
+    if index % 60 == 99999:
         t2 = threading.Thread(target=loop_one_time_60)
         t2.start()
         t2.join()
