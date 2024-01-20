@@ -30,6 +30,7 @@ class Crawler:
         current_minute = current_time.minute
         print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
         self.base.clear_images_folder()
+
         if (type == "PTT"):
             # 每 5 分鐘執行一次 ptt
             self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image)
@@ -40,6 +41,12 @@ class Crawler:
         if (type == "clickme"):
             # 每小時爬 clickme
             self.scrape_clickme(self.chat_id_image)
+
+        if (type == "delete"):
+            if (not self.is_test):
+                sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
+                db.delete(sql)
+
         print(f"{type} 執行結束: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # ---------------
