@@ -66,15 +66,15 @@ if __name__ == '__main__':
     crawler_clickme_with_args = partial(crawler_clickme, crawler)
 
     # 初始执行一次
-    crawler_delete()
-    crawler_PTT_with_args()
+    # crawler_delete()
+    # crawler_PTT_with_args()
     crawler_clickme_with_args()
 
-    schedule.every(5).minutes.do(crawler_PTT_with_args)
-    schedule.every(60).minutes.do(crawler_clickme_with_args)
-    schedule.every().day.at("02:00").do(crawler_delete)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    # schedule.every(5).minutes.do(crawler_PTT_with_args)
+    # schedule.every(60).minutes.do(crawler_clickme_with_args)
+    # schedule.every().day.at("02:00").do(crawler_delete)
+    #
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
 

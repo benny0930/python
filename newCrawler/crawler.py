@@ -13,7 +13,7 @@ class Crawler:
         self._config: dict = config
         self.base = Base(config)
         self._db = db
-        self.is_test = False
+        self.is_test = True
         self.chat_id_image = "-1001932657196"  # 正式
         self.chat_id_money = "-1001647881084"  # 正式
         if (self.is_test):
@@ -43,6 +43,7 @@ class Crawler:
             self.scrape_clickme(self.chat_id_image)
 
         if (type == "delete"):
+            self.base.url = []
             if (not self.is_test):
                 sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
                 db.delete(sql)
@@ -82,16 +83,16 @@ class Crawler:
                         continue
 
                     if href_value in self.base.url:
-                        print(f'已存在\n')
+                        print(f'已存在(base)\n')
                         continue
-
+                    self.base.url.append(href_value)
                     results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href_value))
                     if len(results) < 1:
                         href_list.append({'title': title_text, 'href': href_value})
 
                         # self.scrape_ptt_detail("Beauty", title_text, "https://www.ptt.cc" + href_value)
                     else:
-                        print(f'已存在\n')
+                        print(f'已存在({results})\n')
                         continue
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
@@ -182,14 +183,14 @@ class Crawler:
                         continue
 
                     if href_value in self.base.url:
-                        print(f'已存在\n')
+                        print(f'已存在(base)\n')
                         continue
-
+                    self.base.url.append(href_value)
                     results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href_value))
                     if len(results) < 1:
                         href_list.append({'title': title_text, 'href': href_value})
                     else:
-                        print(f'已存在\n')
+                        print(f'已存在({results})\n')
                         continue
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")

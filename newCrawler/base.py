@@ -19,7 +19,7 @@ class Base:
         self.bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
     def send_media_group(self, _chat_id, _media=None):
         if _media is not None and len(_media) > 0:
-            print(len(_media))
+            print(f"此次發送數量{len(_media)}")
             images = []
             image_names = []
             for url_one in _media:
@@ -27,8 +27,8 @@ class Base:
                     val = url_one.rsplit('.', 1)[1]
                     if val == 'gif':
                         # Send a gif
-                        print("GIF : " + url_one)
-                        self.sendDocument(self.chat_id_image, url_one, "")
+                        print("發送GIF : " + url_one)
+                        self.sendDocument(_chat_id, url_one, "")
                     elif val == 'jpg':
                         # Send a Picture
                         print("Picture : " + url_one)
@@ -44,6 +44,7 @@ class Base:
                         self.sendTG(_chat_id, url_one)
 
                     if len(images) == 9:
+                        # print(f"發送圖片")
                         self.sendMediaGroup(_chat_id, images)
                         images = []
                 except:
