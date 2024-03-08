@@ -4,6 +4,8 @@ import simplejson as json
 import inspect
 import base64
 import db
+import random
+
 
 from decimal import Decimal, InvalidOperation
 from functools import partial
@@ -27,7 +29,8 @@ class Crawler:
 
     async def run(self):
         tasks = []
-        usernames = ['big930{:02d}'.format(i) for i in range(1, 62)]
+        # usernames = ['big930{:02d}'.format(i) for i in range(1, 62)]
+        usernames = ['big93031','big93035','big93056','big93057']
         for account in usernames:
             print()
             print(account)
@@ -71,7 +74,7 @@ class Crawler:
 
                 await page.goto('https://swag.live/settings?lang=zh-TW')
                 await self.swag_login(page, account, account)
-                await page.wait_for_timeout(30 * 1000)
+                # await page.wait_for_timeout(30 * 1000)
                 if await self.swag_award(page, account):
                     await self.swag_money(page, account)
                     await browser.close()
@@ -153,7 +156,7 @@ class Crawler:
             sql = "INSERT INTO fa_sw (name, m, createtime, updatetime, update_at) "
             sql += f"VALUES ('{account}', '{diamond}', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()), DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'))"
             sql += "ON DUPLICATE KEY UPDATE "
-            sql += f"m = '{diamond}' , update_at = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s');"
+            sql += f"m = '{diamond}' , update_at = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), m_before = CONCAT(m, ',', m_before) ;"
             db.insert(sql)
 
         except Exception as e:

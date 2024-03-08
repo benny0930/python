@@ -13,7 +13,7 @@ class Crawler:
         self._config: dict = config
         self.base = Base(config)
         self._db = db
-        self.is_test = True
+        self.is_test = config['is_test']
         self.chat_id_image = "-1001932657196"  # 正式
         self.chat_id_money = "-1001647881084"  # 正式
         if (self.is_test):
@@ -26,6 +26,11 @@ class Crawler:
         pass
 
     def run(self, type):
+
+        if (type == "TEST"):
+            self.scrape_ptt_detail("Beauty", self.chat_id_image, '測試', "bbs/Beauty/M.1709373509.A.EF2.html")
+            return
+
         current_time = datetime.now()
         current_minute = current_time.minute
         print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -129,13 +134,19 @@ class Crawler:
                 with open("python_ptt.png", 'rb') as photo_file:
                     self.base.send_photo(chat_id, photo_file, '<a href="' + url + '">' + title + '</a>', True)
 
+                if (self.is_test):
+                    print(type)
+
                 if type == "Beauty":
                     all_links = page.query_selector_all('#main-content a')
-
+                    if (self.is_test):
+                        print(all_links)
                     send_links = []
 
                     for link in all_links:
                         href_value = link.get_attribute('href')
+                        if (self.is_test):
+                            print(href_value)
                         if href_value.find('www.ptt.cc') >= 0:
                             print(f'{href_value} => 跳過\n')
                             continue

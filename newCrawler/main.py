@@ -11,7 +11,7 @@ from functools import partial
 def parse_args():
     parser = ArgumentParser('Benny爬蟲')
     parser.add_argument('--config', '-c', default='config.yml', help='設定擋路徑')
-    parser.add_argument('--is_test', '-t', default='test', help='test')
+    parser.add_argument('--test', '-t', default=False, action='store_true', help='測試模式')
     return parser.parse_args()
 
 
@@ -55,26 +55,29 @@ if __name__ == '__main__':
     with open(args.config, 'r', encoding='utf-8') as config_file:
         config = yaml.safe_load(config_file)
     config.update({
-        'is_test': args.is_test,
+        'is_test': args.test,
     })
     crawler = Crawler(config)
     crawler.setup()
-    # crawler.run()
+
+    # 測試
+    crawler.run("TEST")
+    exit()
 
     # 创建一个带有参数的部分应用函数
     crawler_PTT_with_args = partial(crawler_PTT, crawler)
     crawler_clickme_with_args = partial(crawler_clickme, crawler)
 
     # 初始执行一次
-    # crawler_delete()
-    # crawler_PTT_with_args()
+    crawler_delete()
+    crawler_PTT_with_args()
     crawler_clickme_with_args()
 
-    # schedule.every(5).minutes.do(crawler_PTT_with_args)
-    # schedule.every(60).minutes.do(crawler_clickme_with_args)
-    # schedule.every().day.at("02:00").do(crawler_delete)
+    schedule.every(5).minutes.do(crawler_PTT_with_args)
+    schedule.every(60).minutes.do(crawler_clickme_with_args)
+    schedule.every().day.at("02:00").do(crawler_delete)
     #
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 

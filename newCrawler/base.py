@@ -9,6 +9,7 @@ import traceback
 from telegram import InputMediaPhoto
 from PIL import Image
 from io import BytesIO
+import sys
 
 
 class Base:
@@ -30,25 +31,30 @@ class Base:
                         print("發送GIF : " + url_one)
                         self.sendDocument(_chat_id, url_one, "")
                     elif val == 'jpg':
-                        # Send a Picture
-                        print("Picture : " + url_one)
-                        if not os.path.exists('images'):
-                            os.makedirs('images')
-                        image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
-                        self.check_image_format(url_one, image_name)
-                        image_names.append(image_name)
-                        image1 = open(image_name, 'rb')
-                        images.append(InputMediaPhoto(image1))
-                        image1.close()
+                        try:
+                            # Send a Picture
+                            print("Picture : " + url_one)
+                            if not os.path.exists('images'):
+                                os.makedirs('images')
+                            image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+                            self.check_image_format(url_one, image_name)
+                            image_names.append(image_name)
+                            image1 = open(image_name, 'rb')
+                            images.append(InputMediaPhoto(image1))
+                            image1.close()
+                        except Exception as e:
+                            # image_names.append(url_one)
+                            self.sendPhoto(_chat_id, url_one, "")
                     else:
                         self.sendTG(_chat_id, url_one)
 
                     if len(images) == 9:
-                        # print(f"發送圖片")
+                        print(f"發送圖片")
                         self.sendMediaGroup(_chat_id, images)
                         images = []
-                except:
-                    pass
+                except Exception as e:
+                    # print("发生错误：", e)
+                    print("详细信息：", sys.exc_info())
 
             if len(images) > 0:
                 self.sendMediaGroup(_chat_id, images)
