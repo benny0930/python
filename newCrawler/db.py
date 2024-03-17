@@ -15,6 +15,7 @@ def select(sql):
         cursor.execute(sql)
         results = cursor.fetchall()
     except:
+        print(sql)
         print("Error: unable to fetch data")
         results = []
     db.close()
@@ -31,6 +32,7 @@ def insert(sql):
         db.close()
         return True
     except:
+        print(sql)
         print("Error: unable to fetch data")
         db.rollback()
     db.close()

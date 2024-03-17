@@ -1,11 +1,14 @@
 # coding: utf-8
 import inspect
-import time
-
 import db
+import json
+import re
+
 from playwright.sync_api import sync_playwright
 from base import Base
 from datetime import datetime, timedelta
+from playwright.sync_api import sync_playwright
+from bs4 import BeautifulSoup
 
 
 class Crawler:
@@ -37,15 +40,16 @@ class Crawler:
         self.base.clear_images_folder()
 
         if (type == "PTT"):
-            # 每 5 分鐘執行一次 ptt
             self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image)
             self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_money)
             self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney", self.chat_id_money)
             self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
 
         if (type == "clickme"):
-            # 每小時爬 clickme
             self.scrape_clickme(self.chat_id_image)
+
+        if (type == "happy"):
+            self.scrape_happy()
 
         if (type == "delete"):
             self.base.url = []
@@ -56,7 +60,10 @@ class Crawler:
         print(f"{type} 執行結束: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # ---------------
-
+    def get_proxy(self):
+        url = 'http://172.104.85.146' # X1
+        port = 3128
+        return f'{url}:{port}'
     # ---------------
 
     def scrape_ptt(self, url, type, chat_id):
@@ -256,4 +263,73 @@ class Crawler:
 
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
+            browser.close()
+
+    def scrape_happy(self):
+
+        with sync_playwright() as pw:
+            # proxy = self.get_proxy()
+            browser = pw.chromium.launch(headless=False)
+            context = browser.new_context()
+            page = context.new_page()
+            for i in range(1, 21):
+
+                url = "https://m.happymh.com/apis/u/myBookcase"
+                url += "?token=BD4BBB0F-F826-4F83-A2FF-E28390EFA8BF"
+                url += "&p=" + str(i)
+                url += "&order_type=order_last_date"
+
+                # 前往目标页面
+                print(url)
+                page.goto(url)  # 替换成你要访问的网址
+
+                # 获取页面内容
+                page_content = page.content()
+
+                json_data_match = re.search(r'{"status":.*}', page_content)
+
+                if json_data_match:
+                    json_data = json_data_match.group()
+
+                    # 尝试解析JSON内容
+                    try:
+                        data = json.loads(json_data)
+                        if "data" in data and "list" in data["data"]:
+                            data_list = data["data"]["list"]
+                            if data_list:
+                                for item in data_list:
+                                    print("--------------------")
+                                    name = item["serie_name"]
+                                    read_name = item["read_chapter_name"]
+                                    last_name = item["last_chapter_name"]
+                                    href_value = "https://m.happymh.com/manga/" + item["serie_code"]
+                                    print([name, read_name, last_name, url])
+                                    results = db.select(" SELECT id, name, last_episode FROM fa_comic WHERE `url` = '%s'" % (href_value))
+                                    if len(results) < 1:
+                                        print("不存在")
+                                        sql = "INSERT INTO `fa_comic` (`name`, `url`, `last_episode`, `new_episode`, `website`, `active`, `new`, `createtime`, `updatetime`) VALUES "
+                                        sql += "('%s', '%s', '%s', '%s', 'happy', 'Y', 'Y', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (name, href_value, read_name, last_name)
+                                        db.insert(sql)
+                                    else:
+                                        comic_id, existing_name, existing_last_name = results[0]
+                                        print([comic_id, existing_name, existing_last_name])
+                                        if last_name != existing_last_name:
+                                            sql = "UPDATE `fa_comic` SET `last_episode` = '"+read_name+"', `new_episode` = '"+last_name+"', `new` = 'Y', `updatetime` = UNIX_TIMESTAMP(NOW()) WHERE `id` = '"+str(comic_id)+"'"
+                                            db.insert(sql)
+                                            print(f'已更新 (ID: {comic_id})')
+                                        else:
+                                            print(f'已存在 (ID: {comic_id})')
+                                    print("-------------------- end ")
+                            else:
+                                print("列表中没有数据")
+                                break
+                        else:
+                            print("数据中不存在list或data")
+                            break
+                    except json.JSONDecodeError:
+                        print("无法解析JSON内容")
+                        break
+                else:
+                    print("未找到JSON数据")
+                    break
             browser.close()

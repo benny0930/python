@@ -35,18 +35,20 @@ def check_and_create():
             print(f"無法新增配置檔 '{config_path}': {e}")
 
 
-
-
 def crawler_PTT(crawler):
     crawler.run("PTT")
+
 
 def crawler_clickme(crawler):
     crawler.run("clickme")
 
+
+def crawler_happy(crawler):
+    crawler.run("happy")
+
+
 def crawler_delete():
     crawler.run("delete")
-
-
 
 
 if __name__ == '__main__':
@@ -61,23 +63,25 @@ if __name__ == '__main__':
     crawler.setup()
 
     # 測試
-    crawler.run("TEST")
+    crawler.run("happy")
     exit()
 
     # 创建一个带有参数的部分应用函数
     crawler_PTT_with_args = partial(crawler_PTT, crawler)
     crawler_clickme_with_args = partial(crawler_clickme, crawler)
+    crawler_happy_with_args = partial(crawler_happy, crawler)
 
     # 初始执行一次
     crawler_delete()
     crawler_PTT_with_args()
     crawler_clickme_with_args()
+    crawler_happy_with_args()
 
     schedule.every(5).minutes.do(crawler_PTT_with_args)
     schedule.every(60).minutes.do(crawler_clickme_with_args)
+    schedule.every(360).minutes.do(crawler_happy_with_args)
     schedule.every().day.at("02:00").do(crawler_delete)
     #
     while True:
         schedule.run_pending()
         time.sleep(1)
-
