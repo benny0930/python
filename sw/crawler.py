@@ -6,7 +6,6 @@ import base64
 import db
 import random
 
-
 from decimal import Decimal, InvalidOperation
 from functools import partial
 from playwright.async_api import async_playwright
@@ -30,7 +29,24 @@ class Crawler:
     async def run(self):
         tasks = []
         # usernames = ['big930{:02d}'.format(i) for i in range(1, 62)]
-        usernames = ['big93031','big93035','big93056','big93057']
+        usernames = ["big93037",
+                     "big93025",
+                     "big93031",
+                     "big93035",
+                     "big93040",
+                     "big93047",
+                     "big93018",
+                     "big93026",
+                     "big93044",
+                     "big93046",
+                     "big93007",
+                     "big93014",
+                     "big93027",
+                     "big93028",
+                     "big93010",
+                     "big93009",
+                     "big93012",
+                     "big93049"]
         for account in usernames:
             print()
             print(account)
@@ -99,7 +115,7 @@ class Crawler:
             await page.wait_for_timeout(1 * 1000)
             await page.click('button[type="submit"]:has-text("登入")')
             print(f"{username} 送出")
-            await page.wait_for_timeout(5 * 1000)
+            await page.wait_for_timeout(2 * 1000)
         except Exception as e:
             await page.screenshot(path="sw.png")
             print(f"{username} An error 2 on line {inspect.currentframe().f_lineno}: {e}")
