@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyyaml = "*"
+playwright = "*"
+simplejson = "*"
+sqlalchemy = "*"
+pymysql = "*"
+requests = "*"
+telegram = "*"
+pillow = "*"
+python-telegram-bot = "==13.7"
+pyinstaller = "*"
+schedule = "*"
+bs4 = "*"
+pttlibrary = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
+python_full_version = "3.11.7"
