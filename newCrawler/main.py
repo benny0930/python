@@ -46,7 +46,17 @@ if __name__ == '__main__':
         "delete": "delete"
     }
 
-    if config['type']:
+    if config['type'] == "ZH":
+        for crawler_type in ["pttLogin", "happy"]:
+            run_crawler(crawler, crawler_type)
+
+        schedule.every(60).minutes.do(partial(run_crawler, crawler, "happy"))
+        schedule.every().day.at("03:00").do(partial(run_crawler, crawler, "pttLogin"))
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+    elif config['type'] != "":
         crawler_type = crawler_mapping.get(config['type'])
         if crawler_type:
             run_crawler(crawler, crawler_type)
@@ -60,9 +70,10 @@ if __name__ == '__main__':
         schedule.every(60).minutes.do(partial(run_crawler, crawler, "clickme"))
         schedule.every(60).minutes.do(partial(run_crawler, crawler, "51"))
         schedule.every().day.at("00:00").do(partial(run_crawler, crawler, "currency"))
-        schedule.every().day.at("03:00").do(partial(run_crawler, crawler, "pttLogin"))
+        schedule.every().day.at("03:00").do(partial(run_crawler, crawler, "delete"))
+        schedule.every().day.at("06:00").do(partial(run_crawler, crawler, "currency"))
         schedule.every().day.at("12:00").do(partial(run_crawler, crawler, "currency"))
-        schedule.every().day.at("02:00").do(partial(run_crawler, crawler, "delete"))
+        schedule.every().day.at("18:00").do(partial(run_crawler, crawler, "currency"))
 
         while True:
             schedule.run_pending()
