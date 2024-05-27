@@ -10,45 +10,21 @@ from functools import partial
 
 def parse_args():
     parser = ArgumentParser('Benny爬蟲')
-    parser.add_argument('--config', '-c', default='config.yml', help='設定擋路徑')
+    parser.add_argument('--config', '-c', default='config.yml', help='設定檔路徑')
     parser.add_argument('--test', '-t', default=False, action='store_true', help='測試模式')
+    parser.add_argument('--type', '-tp', default="", help='類型')
     return parser.parse_args()
 
 
 def check_and_create():
-    folder_path = "images"
-    if not os.path.exists(folder_path):
-        try:
-            os.makedirs(folder_path)
-            print(f"資料夾 '{folder_path}' 新增成功。")
-        except OSError as e:
-            print(f"無法新增資料夾 '{folder_path}': {e}")
-
-    config_path = 'config.yml'
-    if not os.path.exists(config_path):
-        try:
-            # 如果檔案不存在，創建一個新的 config.yaml
-            with open(config_path, 'w') as config_file:
-                yaml.dump({}, config_file, default_flow_style=False)
-            print(f"配置檔 '{config_path}' 新增成功。")
-        except OSError as e:
-            print(f"無法新增配置檔 '{config_path}': {e}")
+    os.makedirs("images", exist_ok=True)
+    if not os.path.exists('config.yml'):
+        with open('config.yml', 'w') as config_file:
+            yaml.dump({}, config_file, default_flow_style=False)
 
 
-def crawler_PTT(crawler):
-    crawler.run("PTT")
-
-
-def crawler_clickme(crawler):
-    crawler.run("clickme")
-
-
-def crawler_happy(crawler):
-    crawler.run("happy")
-
-
-def crawler_delete():
-    crawler.run("delete")
+def run_crawler(crawler, crawler_type):
+    crawler.run(crawler_type)
 
 
 if __name__ == '__main__':
@@ -56,32 +32,38 @@ if __name__ == '__main__':
     args = parse_args()
     with open(args.config, 'r', encoding='utf-8') as config_file:
         config = yaml.safe_load(config_file)
-    config.update({
-        'is_test': args.test,
-    })
+    config.update({'is_test': args.test, 'type': args.type})
     crawler = Crawler(config)
     crawler.setup()
 
-    # 測試
-    crawler.run("happy")
-    exit()
+    crawler_mapping = {
+        "PTT": "PTT",
+        "clickme": "clickme",
+        "51": "51",
+        "happy": "happy",
+        "currency": "currency",
+        "pttLogin": "pttLogin",
+        "delete": "delete"
+    }
 
-    # 创建一个带有参数的部分应用函数
-    crawler_PTT_with_args = partial(crawler_PTT, crawler)
-    crawler_clickme_with_args = partial(crawler_clickme, crawler)
-    crawler_happy_with_args = partial(crawler_happy, crawler)
+    if config['type']:
+        crawler_type = crawler_mapping.get(config['type'])
+        if crawler_type:
+            run_crawler(crawler, crawler_type)
+        else:
+            print(f"錯誤: 沒有找到對應的爬蟲函數 'crawler_{config['type']}'")
+    else:
+        for crawler_type in ["delete", "PTT", "clickme", "51", "currency"]:
+            run_crawler(crawler, crawler_type)
 
-    # 初始执行一次
-    crawler_delete()
-    crawler_PTT_with_args()
-    crawler_clickme_with_args()
-    crawler_happy_with_args()
+        schedule.every(5).minutes.do(partial(run_crawler, crawler, "PTT"))
+        schedule.every(60).minutes.do(partial(run_crawler, crawler, "clickme"))
+        schedule.every(60).minutes.do(partial(run_crawler, crawler, "51"))
+        schedule.every().day.at("00:00").do(partial(run_crawler, crawler, "currency"))
+        schedule.every().day.at("03:00").do(partial(run_crawler, crawler, "pttLogin"))
+        schedule.every().day.at("12:00").do(partial(run_crawler, crawler, "currency"))
+        schedule.every().day.at("02:00").do(partial(run_crawler, crawler, "delete"))
 
-    schedule.every(5).minutes.do(crawler_PTT_with_args)
-    schedule.every(60).minutes.do(crawler_clickme_with_args)
-    schedule.every(360).minutes.do(crawler_happy_with_args)
-    schedule.every().day.at("02:00").do(crawler_delete)
-    #
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+        while True:
+            schedule.run_pending()
+            time.sleep(1)

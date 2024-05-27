@@ -10,7 +10,8 @@ from telegram import InputMediaPhoto
 from PIL import Image
 from io import BytesIO
 import sys
-
+import base64
+import json
 
 class Base:
     url = []
@@ -25,18 +26,27 @@ class Base:
             image_names = []
             for url_one in _media:
                 try:
-                    val = url_one.rsplit('.', 1)[1]
+                    if "http" in url_one:
+                        val = url_one.rsplit('.', 1)[1]
+                    else:
+                        val = "jpg"
                     if val == 'gif':
                         # Send a gif
                         print("發送GIF : " + url_one)
                         self.sendDocument(_chat_id, url_one, "")
-                    elif val == 'jpg':
+                    elif val == 'jpg' or val == 'jpeg':
                         try:
-                            # Send a Picture
-                            print("Picture : " + url_one)
                             if not os.path.exists('images'):
                                 os.makedirs('images')
-                            image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+
+                            # Send a Picture
+                            if "http" in url_one:
+                                print("Picture : " + url_one)
+                                image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+                            else:
+                                print("Picture base64 ")
+                                image_name = 'images/image_' + str(hashlib.md5(str(time.time()).encode()).hexdigest()) + '.jpg'
+
                             self.check_image_format(url_one, image_name)
                             image_names.append(image_name)
                             image1 = open(image_name, 'rb')
@@ -81,14 +91,22 @@ class Base:
                 pass
 
     def check_image_format(self, url, name):
-        response = requests.get(url)
 
-        # 将图片转换为 JPG 格式
-        img = Image.open(BytesIO(response.content))
-        img = img.convert('RGB')
+        if "http" in url :
+            response = requests.get(url)
 
-        # 保存图片为 JPG 格式
-        img.save(name)
+            # 将图片转换为 JPG 格式
+            img = Image.open(BytesIO(response.content))
+            img = img.convert('RGB')
+
+            # 保存图片为 JPG 格式
+            img.save(name)
+
+        else:
+            base64_data = url.split(',')[1]
+            with open(name, "wb") as f:
+                f.write(base64.b64decode(base64_data))
+
 
     def sendTG(self, _chat_id, _msg, index=0):
         global sleep_sec
@@ -188,3 +206,12 @@ class Base:
             except:
                 pass
 
+    def api_get(self,url,params):
+        response = requests.get(url, params=params)
+
+        if response.status_code == 200:
+            # 解析JSON響應
+            data = response.json()
+            return data
+        else:
+            return None
