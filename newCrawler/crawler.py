@@ -413,7 +413,7 @@ class Crawler:
             print(href_value)
             self.scrape_51_detail("51", chat_id, pair['title'], pair['href'])
 
-    def currency(self, chat_id):
+    def currency_240607(self, chat_id):
 
         now = datetime.now()
         formatted_date_time = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -450,6 +450,42 @@ class Crawler:
             msg_sendTG += '<b>成本</b>: ' + cost + '\n'
             msg_sendTG += '<b>時價</b>: ' + str(USDT) + '\n'
             profit_USDT = round((float(USDT) - float(cost)) * float(quantity), 2)
+            total_profit_USDT += profit_USDT
+            profit_TWD = round(profit_USDT * float(money_usdt_to_twd), 2)
+            total_profit_TWD += profit_TWD
+            msg_sendTG += '<b>盈虧(USDT)</b>: ' + str(profit_USDT) + '\n'
+            msg_sendTG += '<b>盈虧(TWD)</b>: ' + str(profit_TWD) + '\n'
+            msg_sendTG += '</blockquote>'
+
+        msg_sendTG += '<blockquote>'
+        msg_sendTG += '<b>總盈虧(USDT)</b>: ' + str(total_profit_USDT) + '\n'
+        msg_sendTG += '<b>總盈虧(TWD)</b>: ' + str(total_profit_TWD) + '\n'
+        msg_sendTG += '</blockquote>'
+
+        self.base.sendTG(chat_id, msg_sendTG)
+
+    def currency(self, chat_id):
+        url = "https://api.coinbase.com/v2/exchange-rates?currency=USDT"
+        params = {}
+        response = self.base.api_get(url, params)
+        money_usdt_to_twd = response['data']['rates']['TWD']
+        msg_sendTG = '<blockquote><b>USDT轉台幣匯率為</b>: ' + money_usdt_to_twd + '</blockquote>'
+
+        total_profit_USDT = 0
+        total_profit_TWD = 0
+        results = db.select(" SELECT name, quantity, cost FROM fa_currency WHERE 1 ")
+        for row in results:
+            name, quantity, cost = row
+            url = "https://api.coinbase.com/v2/exchange-rates?currency=" + str(name)
+            params = {}
+            response = self.base.api_get(url, params)
+            money_to_USDT = response['data']['rates']['USD']
+            msg_sendTG += '<blockquote>'
+            msg_sendTG += '<b>幣種</b>: ' + name + '\n'
+            msg_sendTG += '<b>數量</b>: ' + quantity + '\n'
+            msg_sendTG += '<b>成本</b>: ' + cost + '\n'
+            msg_sendTG += '<b>時價</b>: ' + str(money_to_USDT) + '\n'
+            profit_USDT = round((float(money_to_USDT) - float(cost)) * float(quantity), 2)
             total_profit_USDT += profit_USDT
             profit_TWD = round(profit_USDT * float(money_usdt_to_twd), 2)
             total_profit_TWD += profit_TWD
