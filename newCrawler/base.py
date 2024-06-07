@@ -39,7 +39,7 @@ class Base:
                             if not os.path.exists('images'):
                                 os.makedirs('images')
 
-                            if "imgur" in url_one:
+                            if "imgur" in url_one or "meee.com" in url_one:
                                 print("Picture : " + url_one)
                                 image1 = url_one
                             else:
