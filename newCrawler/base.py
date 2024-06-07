@@ -39,17 +39,21 @@ class Base:
                             if not os.path.exists('images'):
                                 os.makedirs('images')
 
-                            # Send a Picture
-                            if "http" in url_one:
+                            if "imgur" in url_one:
                                 print("Picture : " + url_one)
-                                image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+                                image1 = url_one
                             else:
-                                print("Picture base64 ")
-                                image_name = 'images/image_' + str(hashlib.md5(str(time.time()).encode()).hexdigest()) + '.jpg'
+                                # Send a Picture
+                                if "http" in url_one:
+                                    print("Picture : " + url_one)
+                                    image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+                                else:
+                                    print("Picture base64 ")
+                                    image_name = 'images/image_' + str(hashlib.md5(str(time.time()).encode()).hexdigest()) + '.jpg'
 
-                            self.check_image_format(url_one, image_name)
-                            image_names.append(image_name)
-                            image1 = open(image_name, 'rb')
+                                self.check_image_format(url_one, image_name)
+                                image_names.append(image_name)
+                                image1 = open(image_name, 'rb')
                             images.append(InputMediaPhoto(image1))
                             image1.close()
                         except Exception as e:

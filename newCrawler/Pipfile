@@ -17,6 +17,7 @@ pyinstaller = "*"
 schedule = "*"
 bs4 = "*"
 pttlibrary = "*"
+downloads = "*"
 
 [dev-packages]
 
