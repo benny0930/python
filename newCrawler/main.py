@@ -6,6 +6,7 @@ import time
 from crawler import Crawler
 from argparse import ArgumentParser
 from functools import partial
+import subprocess
 
 
 def parse_args():
@@ -21,6 +22,13 @@ def check_and_create():
     if not os.path.exists('config.yml'):
         with open('config.yml', 'w') as config_file:
             yaml.dump({}, config_file, default_flow_style=False)
+
+def update_code():
+    try:
+        subprocess.run(["git", "pull"], check=True)
+        print("Code updated successfully.")
+    except subprocess.CalledProcessError as e:
+        print("Failed to update code:", e)
 
 
 def run_crawler(crawler, crawler_type):
@@ -47,6 +55,7 @@ if __name__ == '__main__':
     }
 
     if config['type'] == "ZH":
+        update_code()
         for crawler_type in ["pttLogin", "happy"]:
             run_crawler(crawler, crawler_type)
 
@@ -63,9 +72,11 @@ if __name__ == '__main__':
         else:
             print(f"錯誤: 沒有找到對應的爬蟲函數 'crawler_{config['type']}'")
     else:
+        update_code()
         for crawler_type in ["delete", "PTT", "clickme", "51", "currency"]:
             run_crawler(crawler, crawler_type)
 
+        schedule.every(10).minutes.do(update_code)
         schedule.every(5).minutes.do(partial(run_crawler, crawler, "PTT"))
         schedule.every(60).minutes.do(partial(run_crawler, crawler, "clickme"))
         schedule.every(60).minutes.do(partial(run_crawler, crawler, "51"))
