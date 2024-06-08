@@ -173,7 +173,8 @@ class Crawler:
                             print(f'{href_value} => 跳過\n')
                             continue
                         send_links.append(href_value)
-
+                    if (self.is_test):
+                        print(send_links)
                     self.base.send_media_group(chat_id, send_links)
 
             except Exception as e:

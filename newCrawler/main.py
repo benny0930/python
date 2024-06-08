@@ -65,6 +65,9 @@ if __name__ == '__main__':
         while True:
             schedule.run_pending()
             time.sleep(1)
+    elif config['type'] == "detail":
+        url = "bbs/Beauty/M.1717826175.A.886.html"
+        crawler.scrape_ptt_detail("Beauty", "-1001911277875", "test", url)
     elif config['type'] != "":
         crawler_type = crawler_mapping.get(config['type'])
         if crawler_type:

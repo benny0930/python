@@ -34,32 +34,35 @@ class Base:
                         # Send a gif
                         print("發送GIF : " + url_one)
                         self.sendDocument(_chat_id, url_one, "")
-                    elif val == 'jpg' or val == 'jpeg':
+                    elif val == 'jpg' or val == 'jpeg' or val == 'png':
+                        print("jpg or jpeg or png")
                         try:
                             if not os.path.exists('images'):
                                 os.makedirs('images')
 
                             if "imgur" in url_one or "meee.com" in url_one:
-                                print("Picture : " + url_one)
+                                print("Picture(image1 = url_one) : " + url_one)
                                 image1 = url_one
+                                images.append(InputMediaPhoto(image1))
                             else:
                                 # Send a Picture
                                 if "http" in url_one:
-                                    print("Picture : " + url_one)
+                                    print("Picture(check_image_format) : " + url_one)
                                     image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
                                 else:
-                                    print("Picture base64 ")
+                                    print("Picture base64(check_image_format) ")
                                     image_name = 'images/image_' + str(hashlib.md5(str(time.time()).encode()).hexdigest()) + '.jpg'
 
                                 self.check_image_format(url_one, image_name)
                                 image_names.append(image_name)
                                 image1 = open(image_name, 'rb')
-                            images.append(InputMediaPhoto(image1))
-                            image1.close()
+                                images.append(InputMediaPhoto(image1))
+                                image1.close()
                         except Exception as e:
-                            # image_names.append(url_one)
+                            print(e)
                             self.sendPhoto(_chat_id, url_one, "")
                     else:
+                        print("未知副檔名、直接發送")
                         self.sendTG(_chat_id, url_one)
 
                     if len(images) == 9:
