@@ -1,5 +1,7 @@
 # coding: utf-8
 import inspect
+import time
+
 import db
 import json
 import re
@@ -530,7 +532,8 @@ class Crawler:
                 page.screenshot(path="python_ptt.png")
                 with open("python_ptt.png", 'rb') as photo_file:
                     self.base.send_photo(chat_id, photo_file, '<a href="' + url + '">' + title + '</a>', True)
-
+                time.sleep(9999)
+                no_send_links = []
                 send_links = []
                 archive = page.wait_for_selector(".post-content")
                 images = archive.query_selector_all("img")
@@ -541,13 +544,14 @@ class Crawler:
                     bottom_images = set(article_bottom_apps.query_selector_all("img"))
                 else:
                     bottom_images = set()
-                filtered_images = [image for image in images if image not in bottom_images]
+                for image in bottom_images:
+                    no_send_links.append(image.get_attribute('src'))
 
-                for image in filtered_images:
+                for image in images:
                     # 获取图像的 src 属性
                     image_src = image.get_attribute('src')
-                    # print(f"圖片連結: {image_src}")
-                    send_links.append(image_src)
+                    if image_src not in no_send_links:
+                        send_links.append(image_src)
                 self.base.send_media_group(chat_id, send_links)
 
             except Exception as e:

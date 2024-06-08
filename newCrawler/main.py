@@ -41,6 +41,7 @@ if __name__ == '__main__':
     with open(args.config, 'r', encoding='utf-8') as config_file:
         config = yaml.safe_load(config_file)
     config.update({'is_test': args.test, 'type': args.type})
+    print(config)
     crawler = Crawler(config)
     crawler.setup()
 
@@ -66,8 +67,8 @@ if __name__ == '__main__':
             schedule.run_pending()
             time.sleep(1)
     elif config['type'] == "detail":
-        url = "bbs/Beauty/M.1717826175.A.886.html"
-        crawler.scrape_ptt_detail("Beauty", "-1001911277875", "test", url)
+        url = "https://www.51cg1.com/archives/146075/"
+        crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     elif config['type'] != "":
         crawler_type = crawler_mapping.get(config['type'])
         if crawler_type:

@@ -198,6 +198,7 @@ class Base:
     def sendPhoto(self, _chat_id, _file_opened, _caption, index=0):
         global sleep_sec
         try:
+            _caption = f"{_caption}\n<u>{self._config['version']}</u>"
             self.bot.sendPhoto(chat_id=_chat_id, photo=_file_opened, caption=_caption, parse_mode='html')
         except Exception as e:
             print(str(e))
