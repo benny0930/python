@@ -533,7 +533,16 @@ class Crawler:
                 send_links = []
                 archive = page.wait_for_selector(".post-content")
                 images = archive.query_selector_all("img")
-                for image in images:
+
+                # 获取 div.article-bottom-apps 内部的 img 元素
+                article_bottom_apps = archive.query_selector(".article-bottom-apps")
+                if article_bottom_apps:
+                    bottom_images = set(article_bottom_apps.query_selector_all("img"))
+                else:
+                    bottom_images = set()
+                filtered_images = [image for image in images if image not in bottom_images]
+
+                for image in filtered_images:
                     # 获取图像的 src 属性
                     image_src = image.get_attribute('src')
                     # print(f"圖片連結: {image_src}")
