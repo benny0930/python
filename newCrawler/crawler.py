@@ -532,7 +532,6 @@ class Crawler:
                 page.screenshot(path="python_ptt.png")
                 with open("python_ptt.png", 'rb') as photo_file:
                     self.base.send_photo(chat_id, photo_file, '<a href="' + url + '">' + title + '</a>', True)
-                time.sleep(9999)
                 no_send_links = []
                 send_links = []
                 archive = page.wait_for_selector(".post-content")
