@@ -7,6 +7,7 @@ from crawler import Crawler
 from argparse import ArgumentParser
 from functools import partial
 import subprocess
+import sys
 
 
 def parse_args():
@@ -23,16 +24,47 @@ def check_and_create():
         with open('config.yml', 'w') as config_file:
             yaml.dump({}, config_file, default_flow_style=False)
 
+
 def update_code():
     try:
-        subprocess.run(["git", "pull"], check=True)
-        print("Code updated successfully.")
+        result = subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
+        if 'Already up to date' not in result.stdout:
+            print("Code updated, restarting...")
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+        else:
+            print("No updates available.")
     except subprocess.CalledProcessError as e:
         print("Failed to update code:", e)
 
 
 def run_crawler(crawler, crawler_type):
     crawler.run(crawler_type)
+
+
+def schedule_tasks(config, crawler):
+    if config['type'] == "ZH":
+        task_list = [
+            (60, run_crawler, "happy"),
+            ("03:00", run_crawler, "pttLogin")
+        ]
+    else:
+        task_list = [
+            (5, update_code, None),
+            (5, run_crawler, "PTT"),
+            (60, run_crawler, "clickme"),
+            (60, run_crawler, "51"),
+            ("00:00", run_crawler, "currency"),
+            ("03:00", run_crawler, "delete"),
+            ("06:00", run_crawler, "currency"),
+            ("12:00", run_crawler, "currency"),
+            ("18:00", run_crawler, "currency")
+        ]
+
+    for interval, func, arg in task_list:
+        if isinstance(interval, int):
+            schedule.every(interval).minutes.do(partial(func, crawler, arg) if arg else func)
+        else:
+            schedule.every().day.at(interval).do(partial(func, crawler, arg) if arg else func)
 
 
 if __name__ == '__main__':
@@ -42,6 +74,7 @@ if __name__ == '__main__':
         config = yaml.safe_load(config_file)
     config.update({'is_test': args.test, 'type': args.type})
     print(config)
+
     crawler = Crawler(config)
     crawler.setup()
 
@@ -55,40 +88,17 @@ if __name__ == '__main__':
         "delete": "delete"
     }
 
-    if config['type'] == "ZH":
-        update_code()
-        for crawler_type in ["pttLogin", "happy"]:
-            run_crawler(crawler, crawler_type)
-
-        schedule.every(60).minutes.do(partial(run_crawler, crawler, "happy"))
-        schedule.every().day.at("03:00").do(partial(run_crawler, crawler, "pttLogin"))
-
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+    if config['type'] in crawler_mapping:
+        run_crawler(crawler, crawler_mapping[config['type']])
     elif config['type'] == "detail":
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
-    elif config['type'] != "":
-        crawler_type = crawler_mapping.get(config['type'])
-        if crawler_type:
-            run_crawler(crawler, crawler_type)
-        else:
-            print(f"錯誤: 沒有找到對應的爬蟲函數 'crawler_{config['type']}'")
     else:
         update_code()
         for crawler_type in ["delete", "PTT", "clickme", "51", "currency"]:
             run_crawler(crawler, crawler_type)
 
-        schedule.every(10).minutes.do(update_code)
-        schedule.every(5).minutes.do(partial(run_crawler, crawler, "PTT"))
-        schedule.every(60).minutes.do(partial(run_crawler, crawler, "clickme"))
-        schedule.every(60).minutes.do(partial(run_crawler, crawler, "51"))
-        schedule.every().day.at("00:00").do(partial(run_crawler, crawler, "currency"))
-        schedule.every().day.at("03:00").do(partial(run_crawler, crawler, "delete"))
-        schedule.every().day.at("06:00").do(partial(run_crawler, crawler, "currency"))
-        schedule.every().day.at("12:00").do(partial(run_crawler, crawler, "currency"))
-        schedule.every().day.at("18:00").do(partial(run_crawler, crawler, "currency"))
+        schedule_tasks(config, crawler)
 
         while True:
             schedule.run_pending()
