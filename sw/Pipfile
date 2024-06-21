@@ -9,6 +9,7 @@ playwright = "*"
 simplejson = "*"
 schedule = "*"
 openpyxl = "*"
+pymysql = "*"
 
 [dev-packages]
 
