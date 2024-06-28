@@ -93,9 +93,15 @@ if __name__ == '__main__':
     elif config['type'] == "detail":
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
+    elif config['type'] == "ZH":
+        url = "https://www.51cg1.com/archives/146075/"
+        crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
         update_code()
-        for crawler_type in ["delete", "PTT", "clickme", "51", "currency"]:
+        crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
+        if config['type'] == "ZH":
+            crawler_type_arr = ["happy", "pttLogin"]
+        for crawler_type in crawler_type_arr:
             run_crawler(crawler, crawler_type)
 
         schedule_tasks(config, crawler)
