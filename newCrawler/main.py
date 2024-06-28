@@ -79,13 +79,14 @@ if __name__ == '__main__':
     crawler.setup()
 
     crawler_mapping = {
+        "TEST": "TEST",
         "PTT": "PTT",
         "clickme": "clickme",
         "51": "51",
         "happy": "happy",
         "currency": "currency",
         "pttLogin": "pttLogin",
-        "delete": "delete"
+        "delete": "delete",
     }
 
     if config['type'] in crawler_mapping:

@@ -39,7 +39,7 @@ class Crawler:
     def run(self, type):
 
         if (type == "TEST"):
-            self.scrape_ptt_detail("Beauty", self.chat_id_image, '測試', "bbs/Beauty/M.1709373509.A.EF2.html")
+            self.base.sendTG(self.chat_id_game, "msg_sendTG")
             return
 
         current_time = datetime.now()
