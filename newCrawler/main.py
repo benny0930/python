@@ -93,9 +93,6 @@ if __name__ == '__main__':
     elif config['type'] == "detail":
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
-    elif config['type'] == "ZH":
-        url = "https://www.51cg1.com/archives/146075/"
-        crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
         update_code()
         crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
