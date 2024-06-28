@@ -24,10 +24,12 @@ class Crawler:
         self.chat_id_image = "-1001932657196"  # 正式
         self.chat_id_money = "-1001647881084"  # 正式
         self.chat_id_currency = "-1002100758150"  # 正式
+        self.chat_id_game = "-4259391320"
         if (self.is_test):
             self.chat_id_image = "-1001911277875"
             self.chat_id_money = "-1001911277875"
             self.chat_id_currency = "-1001911277875"
+            self.chat_id_game = "-1001911277875"
 
     # ---------------
 
@@ -47,7 +49,7 @@ class Crawler:
 
         if (type == "PTT"):
             self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image)
-            self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_money)
+            self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game)
             self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney", self.chat_id_money)
             self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
 

@@ -97,7 +97,7 @@ if __name__ == '__main__':
         update_code()
         crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
         if config['type'] == "ZH":
-            crawler_type_arr = ["happy", "pttLogin"]
+            crawler_type_arr = ["happy"]
         for crawler_type in crawler_type_arr:
             run_crawler(crawler, crawler_type)
 
