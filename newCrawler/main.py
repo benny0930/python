@@ -101,12 +101,17 @@ def schedule_tasks(config, crawler):
 
 
 def countdown_timer(seconds):
+    initial_seconds = seconds
     while seconds:
         mins, secs = divmod(seconds, 60)
         timer = f'{mins:02}:{secs:02}'
         print(f"Next task execution in: {timer}", end="\r")
         time.sleep(1)
         seconds -= 1
+        if seconds % 60 == 0:
+            remaining_time = initial_seconds - (initial_seconds - seconds)
+            remaining_mins, remaining_secs = divmod(remaining_time, 60)
+            print(f"\nTime remaining until next task execution: {remaining_mins:02}:{remaining_secs:02}")
 
 
 if __name__ == '__main__':
