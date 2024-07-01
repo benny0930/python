@@ -28,7 +28,7 @@ def check_and_create():
             yaml.dump({}, config_file, default_flow_style=False)
 
 
-def update_code(config):
+def update_code():
     try:
         print("Deleting all contents in images folder")
         delete_all_contents("./images")
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
-        update_code(config)
+        update_code()
         crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
         if config['type'] == "ZH":
             crawler_type_arr = ["happy"]
