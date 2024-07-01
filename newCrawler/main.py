@@ -1,6 +1,7 @@
 # coding: utf-8
 import yaml
 import os
+import shutil
 import schedule
 import time
 from crawler import Crawler
@@ -50,6 +51,28 @@ def run_crawler_with_timeout(crawler, crawler_type, timeout=600):
 def run_crawler(crawler, crawler_type):
     crawler.run(crawler_type)
 
+
+def delete_all_contents(directory):
+    # 確認資料夾存在
+    if not os.path.exists(directory):
+        print(f"The directory {directory} does not exist.")
+        return
+
+    # 刪除資料夾內的所有檔案和資料夾
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+                print(f"Deleted file: {file_path}")
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+                print(f"Deleted folder: {file_path}")
+        except Exception as e:
+            print(f"Failed to delete {file_path}. Reason: {e}")
+
+def schedule_delete_task():
+    delete_all_contents("./images")
 
 def schedule_tasks(config, crawler):
     if config['type'] == "ZH":
@@ -113,6 +136,9 @@ if __name__ == '__main__':
             run_crawler_with_timeout(crawler, crawler_type)
 
         schedule_tasks(config, crawler)
+
+        schedule_delete_task()
+        schedule.every(10).minutes.do(schedule_delete_task)
 
         while True:
             schedule.run_pending()

@@ -75,8 +75,8 @@ class Base:
 
             if len(images) > 0:
                 self.sendMediaGroup(_chat_id, images)
-            for name_one in image_names:
-                self.remove_image(name_one)
+            # for name_one in image_names:
+            #     self.remove_image(name_one)
 
     def sendDocument(self, _chat_id, _file_opened, _caption, index=0):
         global sleep_sec
@@ -163,7 +163,7 @@ class Base:
             time.sleep(1)
             index+=1
             if index < 4:
-                self.remove_image(name_one)
+                self.remove_image(name_one, index)
 
     def clear_images_folder(self):
         images_folder = 'images'
