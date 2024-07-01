@@ -29,6 +29,10 @@ def check_and_create():
 
 def update_code():
     try:
+        print("delete_all_contents")
+        delete_all_contents("./images")
+
+        print("git pull")
         result = subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
         if 'Already up to date' not in result.stdout:
             print("Code updated, restarting...")
@@ -71,8 +75,6 @@ def delete_all_contents(directory):
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
 
-def schedule_delete_task():
-    delete_all_contents("./images")
 
 def schedule_tasks(config, crawler):
     if config['type'] == "ZH":
@@ -82,7 +84,7 @@ def schedule_tasks(config, crawler):
         ]
     else:
         task_list = [
-            (5, update_code, None),
+            (1, update_code, None),
             (5, run_crawler_with_timeout, "PTT"),
             (60, run_crawler_with_timeout, "clickme"),
             (60, run_crawler_with_timeout, "51"),
@@ -136,9 +138,6 @@ if __name__ == '__main__':
             run_crawler_with_timeout(crawler, crawler_type)
 
         schedule_tasks(config, crawler)
-
-        schedule_delete_task()
-        schedule.every(10).minutes.do(schedule_delete_task)
 
         while True:
             schedule.run_pending()
