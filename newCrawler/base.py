@@ -154,14 +154,16 @@ class Base:
             except:
                 pass
 
-    def remove_image(self, name_one):
+    def remove_image(self, name_one, index=0):
         try:
             os.remove(name_one)
         except Exception as e:
             traceback.print_exc()  # 這會顯示詳細的異常信息，包括行數
             print(f"An error occurred: {str(e)}")
             time.sleep(1)
-            self.remove_image(name_one)
+            index+=1
+            if index < 4:
+                self.remove_image(name_one)
 
     def clear_images_folder(self):
         images_folder = 'images'

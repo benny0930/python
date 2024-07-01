@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from functools import partial
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 
 def parse_args():
@@ -37,6 +38,15 @@ def update_code():
         print("Failed to update code:", e)
 
 
+def run_crawler_with_timeout(crawler, crawler_type, timeout=600):
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(run_crawler, crawler, crawler_type)
+        try:
+            future.result(timeout=timeout)
+        except TimeoutError:
+            print(f"run_crawler for {crawler_type} exceeded the timeout of {timeout} seconds and was terminated.")
+
+
 def run_crawler(crawler, crawler_type):
     crawler.run(crawler_type)
 
@@ -44,20 +54,20 @@ def run_crawler(crawler, crawler_type):
 def schedule_tasks(config, crawler):
     if config['type'] == "ZH":
         task_list = [
-            (60, run_crawler, "happy"),
-            ("03:00", run_crawler, "pttLogin")
+            (60, run_crawler_with_timeout, "happy"),
+            ("03:00", run_crawler_with_timeout, "pttLogin")
         ]
     else:
         task_list = [
             (5, update_code, None),
-            (5, run_crawler, "PTT"),
-            (60, run_crawler, "clickme"),
-            (60, run_crawler, "51"),
-            ("00:00", run_crawler, "currency"),
-            ("03:00", run_crawler, "delete"),
-            ("06:00", run_crawler, "currency"),
-            ("12:00", run_crawler, "currency"),
-            ("18:00", run_crawler, "currency")
+            (5, run_crawler_with_timeout, "PTT"),
+            (60, run_crawler_with_timeout, "clickme"),
+            (60, run_crawler_with_timeout, "51"),
+            ("00:00", run_crawler_with_timeout, "currency"),
+            ("03:00", run_crawler_with_timeout, "delete"),
+            ("06:00", run_crawler_with_timeout, "currency"),
+            ("12:00", run_crawler_with_timeout, "currency"),
+            ("18:00", run_crawler_with_timeout, "currency")
         ]
 
     for interval, func, arg in task_list:
@@ -90,7 +100,7 @@ if __name__ == '__main__':
     }
 
     if config['type'] in crawler_mapping:
-        run_crawler(crawler, crawler_mapping[config['type']])
+        run_crawler_with_timeout(crawler, crawler_mapping[config['type']])
     elif config['type'] == "detail":
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
@@ -100,7 +110,7 @@ if __name__ == '__main__':
         if config['type'] == "ZH":
             crawler_type_arr = ["happy"]
         for crawler_type in crawler_type_arr:
-            run_crawler(crawler, crawler_type)
+            run_crawler_with_timeout(crawler, crawler_type)
 
         schedule_tasks(config, crawler)
 
