@@ -28,7 +28,7 @@ def check_and_create():
             yaml.dump({}, config_file, default_flow_style=False)
 
 
-def update_code():
+def update_code(config):
     try:
         print("Deleting all contents in images folder")
         delete_all_contents("./images")
@@ -101,13 +101,13 @@ def schedule_tasks(config, crawler):
             schedule.every().day.at(interval).do(partial(func, crawler, arg) if arg else func)
 
 
-def countdown_timer(seconds):
+def countdown_timer(config, seconds):
     while seconds:
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         mins, secs = divmod(seconds, 60)
         timer = f'{mins:02}:{secs:02}'
         # print(f"Next task execution in: {timer}", end="\r")
-        print(f"{current_time} - Next task execution in: {timer}", end="\r")
+        print(f"{current_time} - {config['version']} - Next task execution in: {timer}", end="\r")
         time.sleep(1)
         seconds -= 1
 
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
-        update_code()
+        update_code(config)
         crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
         if config['type'] == "ZH":
             crawler_type_arr = ["happy"]
@@ -151,4 +151,4 @@ if __name__ == '__main__':
 
         while True:
             schedule.run_pending()
-            countdown_timer(60)
+            countdown_timer(config, 60)
