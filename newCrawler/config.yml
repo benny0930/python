@@ -1,5 +1,5 @@
 sample: "test"
-version: "v1.0.10"
+version: "v1.0.11"
 ptt_account: [
   {account: kailovemoon, password: 111111},
   {account: kiey, password: 111111},

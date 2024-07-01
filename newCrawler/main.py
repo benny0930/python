@@ -29,10 +29,10 @@ def check_and_create():
 
 def update_code():
     try:
-        print("delete_all_contents")
+        print("Deleting all contents in images folder")
         delete_all_contents("./images")
 
-        print("git pull")
+        print("Executing git pull")
         result = subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
         if 'Already up to date' not in result.stdout:
             print("Code updated, restarting...")
@@ -57,12 +57,10 @@ def run_crawler(crawler, crawler_type):
 
 
 def delete_all_contents(directory):
-    # 確認資料夾存在
     if not os.path.exists(directory):
         print(f"The directory {directory} does not exist.")
         return
 
-    # 刪除資料夾內的所有檔案和資料夾
     for filename in os.listdir(directory):
         file_path = os.path.join(directory, filename)
         try:
@@ -100,6 +98,15 @@ def schedule_tasks(config, crawler):
             schedule.every(interval).minutes.do(partial(func, crawler, arg) if arg else func)
         else:
             schedule.every().day.at(interval).do(partial(func, crawler, arg) if arg else func)
+
+
+def countdown_timer(seconds):
+    while seconds:
+        mins, secs = divmod(seconds, 60)
+        timer = f'{mins:02}:{secs:02}'
+        print(f"Next task execution in: {timer}", end="\r")
+        time.sleep(1)
+        seconds -= 1
 
 
 if __name__ == '__main__':
@@ -141,4 +148,4 @@ if __name__ == '__main__':
 
         while True:
             schedule.run_pending()
-            time.sleep(1)
+            countdown_timer(60)
