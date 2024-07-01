@@ -4,11 +4,12 @@ import os
 import shutil
 import schedule
 import time
+import subprocess
+import sys
 from crawler import Crawler
 from argparse import ArgumentParser
 from functools import partial
-import subprocess
-import sys
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 
@@ -101,17 +102,14 @@ def schedule_tasks(config, crawler):
 
 
 def countdown_timer(seconds):
-    initial_seconds = seconds
     while seconds:
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         mins, secs = divmod(seconds, 60)
         timer = f'{mins:02}:{secs:02}'
-        print(f"Next task execution in: {timer}", end="\r")
+        # print(f"Next task execution in: {timer}", end="\r")
+        print(f"{current_time} - Next task execution in: {timer}", end="\r")
         time.sleep(1)
         seconds -= 1
-        if seconds % 60 == 0:
-            remaining_time = initial_seconds - (initial_seconds - seconds)
-            remaining_mins, remaining_secs = divmod(remaining_time, 60)
-            print(f"\nTime remaining until next task execution: {remaining_mins:02}:{remaining_secs:02}")
 
 
 if __name__ == '__main__':
