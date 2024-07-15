@@ -12,6 +12,8 @@ from functools import partial
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
+index = 0
+
 
 def parse_args():
     parser = ArgumentParser('Benny爬蟲')
@@ -28,7 +30,12 @@ def check_and_create():
             yaml.dump({}, config_file, default_flow_style=False)
 
 
-def update_code():
+def update_code(index):
+    if index == 56:
+        index = 0
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+    else:
+        index += 1
     try:
         print("Deleting all contents in images folder")
         delete_all_contents("./images")
@@ -83,7 +90,7 @@ def schedule_tasks(config, crawler):
         ]
     else:
         task_list = [
-            (1, update_code, None),
+            (1, update_code, index),
             (5, run_crawler_with_timeout, "PTT"),
             (60, run_crawler_with_timeout, "clickme"),
             (60, run_crawler_with_timeout, "51"),
