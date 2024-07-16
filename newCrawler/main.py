@@ -147,7 +147,7 @@ if __name__ == '__main__':
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
-        update_code()
+        update_code(index)
         crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
         if config['type'] == "ZH":
             crawler_type_arr = ["happy"]
