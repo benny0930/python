@@ -14,6 +14,8 @@ from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 from datetime import datetime
 from PTTLibrary import PTT
+import sys
+
 
 class Crawler:
     def __init__(self, config, ):
@@ -37,44 +39,46 @@ class Crawler:
         pass
 
     def run(self, type):
+        try:
 
-        if (type == "TEST"):
-            self.base.sendTG(self.chat_id_game, "msg_sendTG")
-            return
+            if (type == "TEST"):
+                self.base.sendTG(self.chat_id_game, "msg_sendTG")
+                return
 
-        current_time = datetime.now()
-        current_minute = current_time.minute
-        print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
-        self.base.clear_images_folder()
+            current_time = datetime.now()
+            current_minute = current_time.minute
+            print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            self.base.clear_images_folder()
 
-        if (type == "PTT"):
-            self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image)
-            self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game)
-            self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney", self.chat_id_money)
-            self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
+            if (type == "PTT"):
+                self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image)
+                self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game)
+                self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney", self.chat_id_money)
+                self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
 
-        if (type == "clickme"):
-            self.scrape_clickme(self.chat_id_image)
+            if (type == "clickme"):
+                self.scrape_clickme(self.chat_id_image)
 
-        if (type == "happy"):
-            self.scrape_happy()
+            if (type == "happy"):
+                self.scrape_happy()
 
-        if (type == "51"):
-            self.scrape_51(self.chat_id_image)
-            # self.scrape_51_detail(type, self.chat_id_image, "111", "https://www.51cg1.com/archives/126502/")
+            if (type == "51"):
+                self.scrape_51(self.chat_id_image)
+                # self.scrape_51_detail(type, self.chat_id_image, "111", "https://www.51cg1.com/archives/126502/")
 
-        if (type == "currency"):
-            self.currency(self.chat_id_currency)
+            if (type == "currency"):
+                self.currency(self.chat_id_currency)
 
-        if (type == "pttLogin"):
-            self.pttLogin(self.chat_id_currency)
+            if (type == "pttLogin"):
+                self.pttLogin(self.chat_id_currency)
 
-        if (type == "delete"):
-            self.base.url = []
-            if (not self.is_test):
-                sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
-                db.delete(sql)
-
+            if (type == "delete"):
+                self.base.url = []
+                if (not self.is_test):
+                    sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
+                    db.delete(sql)
+        except:
+            self.base.sendTG(self.chat_id_currency, type + " error : " + sys.exc_info())
         print(f"{type} 執行結束: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # ---------------
