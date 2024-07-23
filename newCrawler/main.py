@@ -12,8 +12,6 @@ from functools import partial
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
-index = 0
-
 
 def parse_args():
     parser = ArgumentParser('Benny爬蟲')
@@ -30,12 +28,7 @@ def check_and_create():
             yaml.dump({}, config_file, default_flow_style=False)
 
 
-def update_code(index):
-    if index == 56:
-        index = 0
-        os.execv(sys.executable, [sys.executable] + sys.argv)
-    else:
-        index += 1
+def update_code():
     try:
         print("Deleting all contents in images folder")
         delete_all_contents("./images")
@@ -90,7 +83,7 @@ def schedule_tasks(config, crawler):
         ]
     else:
         task_list = [
-            (1, update_code, index),
+            (1, update_code, None),
             (5, run_crawler_with_timeout, "PTT"),
             (60, run_crawler_with_timeout, "clickme"),
             (60, run_crawler_with_timeout, "51"),
@@ -147,7 +140,7 @@ if __name__ == '__main__':
         url = "https://www.51cg1.com/archives/146075/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
-        update_code(index)
+        update_code()
         crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
         if config['type'] == "ZH":
             crawler_type_arr = ["happy"]
