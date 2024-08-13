@@ -1,17 +1,15 @@
 # coding: utf-8
 import inspect
-import time
-
 import db
 import json
 import re
-import requests
+import os
+import shutil
+import instaloader
+import time
 
-from playwright.sync_api import sync_playwright
 from base import Base
-from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright
-from bs4 import BeautifulSoup
 from datetime import datetime
 from PTTLibrary import PTT
 import sys
@@ -71,6 +69,9 @@ class Crawler:
 
             if (type == "pttLogin"):
                 self.pttLogin(self.chat_id_currency)
+
+            if (type == "ig"):
+                self.scrape_ig(self.chat_id_image)
 
             if (type == "delete"):
                 self.base.url = []
@@ -562,3 +563,50 @@ class Crawler:
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
             browser.close()
+
+    def scrape_ig(self, chat_id):
+        instagram_usernames = {
+            "my._.chuuu": "李珠珢",
+        }
+        # 李珠珢 my._.chuuu
+        L = instaloader.Instaloader()
+        L.download_pictures = True
+        L.download_videos = True
+        L.download_comments = False  # 禁用評論下載
+        L.download_video_thumbnails = False  # 禁用視頻縮略圖下載
+        for instagram_username, name in instagram_usernames.items():
+            try:
+                send_links = []
+                print(f"爬取頁面內容 => 帳號: {name} - {instagram_username}")
+                L.download_profile(instagram_username, profile_pic_only=False)
+                time.sleep(5)
+                content_dir = os.path.join(os.getcwd(), instagram_username)
+                for root, dirs, files in os.walk(content_dir):
+                    for file in files:
+                        ig_url = f"https://instagram.com/{instagram_username}/"
+                        file_name = file
+                        file_extension = os.path.splitext(file)[1]
+                        file_url = ig_url + "/" + file
+                        file_path = os.path.join(root, file)
+                        print(f"副檔名:{file_extension}")
+                        if "mp4" in file_extension:
+                            print("檔案發送")
+                            self.base.sendDocument(chat_id, file_path, '')
+                        if "jpg" in file_extension or "png" in file_extension:
+                            print("圖片發送")
+                            self.base.send_photo(chat_id, file_path, '', True)
+                self.base.send_media_group(chat_id, send_links)
+            except Exception as e:
+                print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
+
+            # try:
+            #     # 確認資料夾存在
+            #     content_dir = os.path.join(os.getcwd(), instagram_username)
+            #     if os.path.exists(content_dir):
+            #         # 刪除資料夾及其所有內容
+            #         shutil.rmtree(content_dir)
+            #         print(f"資料夾 {content_dir} 已刪除。")
+            #     else:
+            #         print(f"資料夾 {content_dir} 不存在。")
+            # except Exception as e:
+            #     print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")

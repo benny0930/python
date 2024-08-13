@@ -18,6 +18,7 @@ schedule = "*"
 bs4 = "*"
 pttlibrary = "*"
 downloads = "*"
+instaloader = "*"
 
 [dev-packages]
 

@@ -1,87 +1,43 @@
-# coding: utf-8
-import time
+import instaloader
+from telegram import Bot
 import os
-import hashlib
-import requests
-import re
-import telegram
-import traceback
-from telegram import InputMediaPhoto
-from PIL import Image
-from io import BytesIO
-import sys
-import base64
-import json
-from downloads import download
-
-bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
-
-def check_image_format(url, name):
-    try:
-        print([url, name])
-        download(url, out_path=name)
-    except requests.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
 
 
-
-def sendMediaGroup(_chat_id, _images, index=0):
-    try:
-        print(f"發送數量：{len(_images)}")
-        bot.send_media_group(chat_id=_chat_id, media=_images)
-    except Exception as e:
-        traceback.print_exc()
-        print(f"An error occurred: {str(e)}")
-        try:
-            if index < 3 and "Retry in" in str(e):
-                index_new = index + 1
-                numbers = [int(n) for n in re.findall('\d+', str(e))]
-                print(f"sleep {numbers[0]} s")
-                time.sleep(numbers[0])
-                sendMediaGroup(_chat_id, _images, index_new)
-        except:
-            pass
+# 配置 Instagram 爬取
+def download_instagram_content(username):
+    L = instaloader.Instaloader()
+    L.download_profile(username, profile_pic_only=False)
 
 
-try:
-    url_one = "https://i.meee.com.tw/efExhlV.png"
+# 配置 Telegram Bot
+def send_to_telegram(bot_token, chat_id, file_path):
+    bot = Bot(token=bot_token)
+    with open(file_path, 'rb') as file:
+        if file_path.endswith('.mp4'):
+            bot.send_video(chat_id=chat_id, video=file)
+        else:
+            bot.send_photo(chat_id=chat_id, photo=file)
 
-    if "meee.com" in url_one:
-        print("YYY")
-    else:
-        print("NNN")
 
-    if not os.path.exists('images'):
-        os.makedirs('images')
+def main(instagram_username, telegram_bot_token, telegram_chat_id):
+    L = instaloader.Instaloader()
+    L.download_profile(instagram_username, profile_pic_only=False)
+    content_dir = os.path.join(os.getcwd(), instagram_username)
+    for root, dirs, files in os.walk(content_dir):
+        for file in files:
+            # 假設下載的檔案以 "https://instagram.com/username/" 開頭
+            ig_url = f"https://instagram.com/{instagram_username}/"
 
-    print(f"Picture: {url_one}")
-    image_name = f'images/image_{hashlib.md5(url_one.encode()).hexdigest()}.jpg'
-    images = []
-    image_names = []
+            file_name = file
+            file_extension = os.path.splitext(file)[1]
+            file_url = ig_url + "/" + file
+        # file_path = os.path.join(root, file)
+        # send_to_telegram(telegram_bot_token, telegram_chat_id, file_path)
 
-    # # 尝试下载并处理图片
-    # check_image_format(url_one, image_name)
-    #
-    # # 确保文件确实存在且有效
-    # if os.path.exists(image_name):
-    #     with open(image_name, 'rb') as image_file:
-    #         images.append(InputMediaPhoto(image_file))
 
-    images.append(InputMediaPhoto(url_one))
-    images.append(InputMediaPhoto(url_one))
-    images.append(InputMediaPhoto(url_one))
-    images.append(InputMediaPhoto(url_one))
-    images.append(InputMediaPhoto(url_one))
-    images.append(InputMediaPhoto(url_one))
+if __name__ == "__main__":
+    instagram_username = 'my._.chuuu'  # 替换为你想要爬取的 Instagram 用户名
+    telegram_bot_token = '5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM'  # 替换为你的 Telegram 机器人 Token
+    telegram_chat_id = '-1001911277875'  # 替换为你的 Telegram 聊天 ID
 
-    # 发送图片
-    # sendMediaGroup("-1001911277875", images)
-except Exception as e:
-    print(f"An error occurred: {e}")
-#
-#
-#
-# import requests
-#
+    main(instagram_username, telegram_bot_token, telegram_chat_id)
