@@ -139,9 +139,9 @@ if __name__ == '__main__':
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
         update_code()
-        crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency","ig"]
+        crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
         if config['type'] == "ZH":
-            crawler_type_arr = ["happy"]
+            crawler_type_arr = ["happy","ig"]
         for crawler_type in crawler_type_arr:
             run_crawler_with_timeout(crawler, crawler_type)
 
