@@ -1,43 +1,56 @@
-import instaloader
-from telegram import Bot
+# coding: utf-8
+import inspect
+import db
+import json
+import re
 import os
+import shutil
+import instaloader
+import time
+
+from base import Base
+from playwright.sync_api import sync_playwright
+from datetime import datetime
+from PTTLibrary import PTT
+import sys
+import yaml
+import os
+import shutil
+import schedule
+import time
+import subprocess
+import sys
+from crawler import Crawler
+from argparse import ArgumentParser
+from functools import partial
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 
-# 配置 Instagram 爬取
-def download_instagram_content(username):
-    L = instaloader.Instaloader()
-    L.download_profile(username, profile_pic_only=False)
+import requests
+from PIL import Image
+from io import BytesIO
+
+# 確保這裡使用的是正確的圖片直接鏈接
+url =  "https://i.imgur.com/tEpqmeh.jpg"  # 這是示例，請確認此鏈接是有效的
+url1 = "https://i.imgur.com/tEpqmeh.jpeg"  # 這是示例，請確認此鏈接是有效的
 
 
-# 配置 Telegram Bot
-def send_to_telegram(bot_token, chat_id, file_path):
-    bot = Bot(token=bot_token)
-    with open(file_path, 'rb') as file:
-        if file_path.endswith('.mp4'):
-            bot.send_video(chat_id=chat_id, video=file)
-        else:
-            bot.send_photo(chat_id=chat_id, photo=file)
+# https://imgur.com/8jMMXNE
+# https://i.imgur.com/8jMMXNE.jpeg
+# 發送請求下載圖片
+response = requests.get(url)
+if response.status_code == 200:
+    # 將圖片保存為本地文件
+    img = Image.open(BytesIO(response.content))
+    img.save("downloaded_image.jpg")  # 本地保存的檔案名稱
+    print("圖片已下載並保存為 downloaded_image.jpg")
+else:
+    print("無法下載圖片。請檢查 URL 是否正確。")
 
 
-def main(instagram_username, telegram_bot_token, telegram_chat_id):
-    L = instaloader.Instaloader()
-    L.download_profile(instagram_username, profile_pic_only=False)
-    content_dir = os.path.join(os.getcwd(), instagram_username)
-    for root, dirs, files in os.walk(content_dir):
-        for file in files:
-            # 假設下載的檔案以 "https://instagram.com/username/" 開頭
-            ig_url = f"https://instagram.com/{instagram_username}/"
-
-            file_name = file
-            file_extension = os.path.splitext(file)[1]
-            file_url = ig_url + "/" + file
-        # file_path = os.path.join(root, file)
-        # send_to_telegram(telegram_bot_token, telegram_chat_id, file_path)
 
 
-if __name__ == "__main__":
-    instagram_username = 'my._.chuuu'  # 替换为你想要爬取的 Instagram 用户名
-    telegram_bot_token = '5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM'  # 替换为你的 Telegram 机器人 Token
-    telegram_chat_id = '-1001911277875'  # 替换为你的 Telegram 聊天 ID
+# https://imgur.com/5BIeBwJ
+# https://imgur.com/tEpqmeh
 
-    main(instagram_username, telegram_bot_token, telegram_chat_id)

@@ -25,7 +25,15 @@ class Base:
             images = []
             image_names = []
             for url_one in _media:
+                print(url_one)
                 try:
+                    url_one_old = url_one
+                    try:
+                        if "imgur" in url_one:
+                            if "imgur.com" in url_one and not url_one.split('/')[-1].count('.') > 0:
+                                url_one = url_one.replace("https://imgur.com/", "https://i.imgur.com/") + ".jpeg"
+                    except Exception as e:
+                        url_one = url_one_old
                     if "http" in url_one:
                         val = url_one.rsplit('.', 1)[1]
                     else:
@@ -34,13 +42,24 @@ class Base:
                         # Send a gif
                         print("發送GIF : " + url_one)
                         self.sendDocument(_chat_id, url_one, "")
+                    if val == 'mp4':
+                        # Send a gif
+                        print("發送mp4 : " + url_one)
+                        self.sendDocument(_chat_id, url_one, "")
                     elif val == 'jpg' or val == 'jpeg' or val == 'png':
                         print("jpg or jpeg or png")
                         try:
                             if not os.path.exists('images'):
                                 os.makedirs('images')
 
-                            if "imgur" in url_one or "meee.com" in url_one:
+                            if "imgur" in url_one:
+                                url_one_new = url_one
+                                if "jpg" in url_one:
+                                    url_one_new = url_one.replace(".jpg", ".jpeg")
+                                print("Picture(image1 = url_one) : " + url_one_new)
+                                image1 = url_one_new
+                                images.append(InputMediaPhoto(image1))
+                            elif "meee.com" in url_one :
                                 print("Picture(image1 = url_one) : " + url_one)
                                 image1 = url_one
                                 images.append(InputMediaPhoto(image1))
@@ -62,7 +81,9 @@ class Base:
                             print(e)
                             self.sendPhoto(_chat_id, url_one, "")
                     else:
-                        print("未知副檔名、直接發送")
+                        print("未知副檔名")
+                        if not os.path.exists('images'):
+                            os.makedirs('images')
                         self.sendTG(_chat_id, url_one)
 
                     if len(images) == 9:

@@ -7,6 +7,7 @@ import os
 import shutil
 import instaloader
 import time
+from telegram import InputMediaPhoto
 
 from base import Base
 from playwright.sync_api import sync_playwright
@@ -40,7 +41,8 @@ class Crawler:
         try:
 
             if (type == "TEST"):
-                self.base.sendTG(self.chat_id_game, "msg_sendTG")
+                self.scrape_ptt_detail("Beauty", "-1001911277875", "test", "/bbs/Beauty/M.1730605065.A.784.html")
+                # self.base.sendTG(self.chat_id_game, "msg_sendTG")
                 return
 
             current_time = datetime.now()
@@ -155,6 +157,7 @@ class Crawler:
                     sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
                     db.insert(sql)
                 url = "https://www.ptt.cc/" + url
+                print(url)
                 page.goto(url)
                 context.add_cookies([{'name': 'over18', 'value': '1', 'url': 'https://www.ptt.cc'}])
                 page.goto(url)
@@ -576,7 +579,7 @@ class Crawler:
         L.download_video_thumbnails = False  # 禁用視頻縮略圖下載
         for instagram_username, name in instagram_usernames.items():
             try:
-                send_links = []
+                # send_links = []
                 print(f"爬取頁面內容 => 帳號: {name} - {instagram_username}")
                 L.download_profile(instagram_username, profile_pic_only=False)
                 time.sleep(5)
@@ -584,18 +587,35 @@ class Crawler:
                 for root, dirs, files in os.walk(content_dir):
                     for file in files:
                         ig_url = f"https://instagram.com/{instagram_username}/"
-                        file_name = file
+                        file_name = instagram_username
                         file_extension = os.path.splitext(file)[1]
-                        file_url = ig_url + "/" + file
+                        file_url = ig_url + file
+
+                        results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (file_url))
+                        if len(results) > 0:
+                            print(f'已存在({results})\n')
+                            continue
+
+                        if (not self.is_test):
+                            sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
+                            sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
+                            "IG", file_url, file_name)
+                            db.insert(sql)
                         file_path = os.path.join(root, file)
                         print(f"副檔名:{file_extension}")
                         if "mp4" in file_extension:
-                            print("檔案發送")
-                            self.base.sendDocument(chat_id, file_path, '')
+                            print(f"檔案發送 - {file_path}")
+                            with open(file_path, 'rb') as file:
+                                # send_links.append(InputMediaPhoto(file))
+                                self.base.sendDocument(chat_id, file, file_url)
                         if "jpg" in file_extension or "png" in file_extension:
-                            print("圖片發送")
-                            self.base.send_photo(chat_id, file_path, '', True)
-                self.base.send_media_group(chat_id, send_links)
+                            print(f"圖片發送 - {file_path}")
+                            with open(file_path, 'rb') as file:
+                                # send_links.append(InputMediaPhoto(file))
+                                self.base.send_photo(chat_id, file, file_url, True)
+                # if send_links:
+                #     self.base.sendTG(chat_id, f"IG => 帳號: {name} - {instagram_username}")
+                #     self.base.send_media_group(chat_id, send_links)
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
 

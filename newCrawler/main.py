@@ -81,15 +81,16 @@ def schedule_tasks(config, crawler):
             (60, run_crawler_with_timeout, "happy"),
             ("03:00", run_crawler_with_timeout, "pttLogin")
         ]
-    else:
         task_list = [
             (1, update_code, None),
             (5, run_crawler_with_timeout, "PTT"),
             (60, run_crawler_with_timeout, "clickme"),
             (60, run_crawler_with_timeout, "51"),
-            (720, run_crawler_with_timeout, "ig"),
+            ("00:00", run_crawler_with_timeout, "pttLogin"),
             ("03:00", run_crawler_with_timeout, "delete"),
         ]
+    else:
+        pass
 
     for interval, func, arg in task_list:
         if isinstance(interval, int):
@@ -126,7 +127,6 @@ if __name__ == '__main__':
         "clickme": "clickme",
         "51": "51",
         "happy": "happy",
-        "currency": "currency",
         "pttLogin": "pttLogin",
         "ig": "ig",
         "delete": "delete",
@@ -139,7 +139,7 @@ if __name__ == '__main__':
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
         update_code()
-        crawler_type_arr = ["delete", "PTT", "clickme", "51", "currency"]
+        crawler_type_arr = ["delete", "pttLogin", "PTT", "clickme", "51"]
         if config['type'] == "ZH":
             crawler_type_arr = ["happy","ig"]
         for crawler_type in crawler_type_arr:
