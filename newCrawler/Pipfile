@@ -19,6 +19,7 @@ bs4 = "*"
 pttlibrary = "*"
 downloads = "*"
 instaloader = "*"
+mysql-connector-python = "*"
 
 [dev-packages]
 

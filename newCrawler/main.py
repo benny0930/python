@@ -81,6 +81,7 @@ def schedule_tasks(config, crawler):
             (60, run_crawler_with_timeout, "happy"),
             ("03:00", run_crawler_with_timeout, "pttLogin")
         ]
+    else:
         task_list = [
             (1, update_code, None),
             (5, run_crawler_with_timeout, "PTT"),
@@ -89,8 +90,6 @@ def schedule_tasks(config, crawler):
             ("00:00", run_crawler_with_timeout, "pttLogin"),
             ("03:00", run_crawler_with_timeout, "delete"),
         ]
-    else:
-        pass
 
     for interval, func, arg in task_list:
         if isinstance(interval, int):
