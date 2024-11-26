@@ -13,12 +13,15 @@ import sys
 import base64
 import json
 
+
 class Base:
     url = []
 
     def __init__(self, config, ):
         self._config: dict = config
+        # https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/getUpdates
         self.bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
+
     def send_media_group(self, _chat_id, _media=None):
         if _media is not None and len(_media) > 0:
             print(f"此次發送數量{len(_media)}")
@@ -59,7 +62,7 @@ class Base:
                                 print("Picture(image1 = url_one) : " + url_one_new)
                                 image1 = url_one_new
                                 images.append(InputMediaPhoto(image1))
-                            elif "meee.com" in url_one :
+                            elif "meee.com" in url_one:
                                 print("Picture(image1 = url_one) : " + url_one)
                                 image1 = url_one
                                 images.append(InputMediaPhoto(image1))
@@ -67,10 +70,12 @@ class Base:
                                 # Send a Picture
                                 if "http" in url_one:
                                     print("Picture(check_image_format) : " + url_one)
-                                    image_name = 'images/image_' + str(hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
+                                    image_name = 'images/image_' + str(
+                                        hashlib.md5(url_one.encode()).hexdigest()) + '.jpg'
                                 else:
                                     print("Picture base64(check_image_format) ")
-                                    image_name = 'images/image_' + str(hashlib.md5(str(time.time()).encode()).hexdigest()) + '.jpg'
+                                    image_name = 'images/image_' + str(
+                                        hashlib.md5(str(time.time()).encode()).hexdigest()) + '.jpg'
 
                                 self.check_image_format(url_one, image_name)
                                 image_names.append(image_name)
@@ -120,7 +125,7 @@ class Base:
 
     def check_image_format(self, url, name):
 
-        if "http" in url :
+        if "http" in url:
             response = requests.get(url)
 
             # 将图片转换为 JPG 格式
@@ -134,7 +139,6 @@ class Base:
             base64_data = url.split(',')[1]
             with open(name, "wb") as f:
                 f.write(base64.b64decode(base64_data))
-
 
     def sendTG(self, _chat_id, _msg, index=0):
         global sleep_sec
@@ -182,7 +186,7 @@ class Base:
             traceback.print_exc()  # 這會顯示詳細的異常信息，包括行數
             print(f"An error occurred: {str(e)}")
             time.sleep(1)
-            index+=1
+            index += 1
             if index < 4:
                 self.remove_image(name_one, index)
 
@@ -213,7 +217,9 @@ class Base:
         if val == 'gif':
             # Send a gif
             # bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
-            self.sendDocument(_chat_id, _file_opened, _caption)
+            _this_chat_id = (_chat_id if self._config['chat_id_image'] == self._config['chat_id_gif']
+                             else self._config['chat_id_gif'])
+            self.sendDocument(_this_chat_id, _file_opened, _caption)
         else:
             # Send a Picture
             self.sendPhoto(_chat_id, _file_opened, _caption)
@@ -237,7 +243,7 @@ class Base:
             except:
                 pass
 
-    def api_get(self,url,params):
+    def api_get(self, url, params):
         response = requests.get(url, params=params)
 
         if response.status_code == 200:

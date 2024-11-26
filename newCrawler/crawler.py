@@ -18,19 +18,23 @@ import sys
 
 class Crawler:
     def __init__(self, config, ):
-        self._config: dict = config
-        self.base = Base(config)
-        self._db = db
         self.is_test = config['is_test']
         self.chat_id_image = "-1001932657196"  # 正式
         self.chat_id_money = "-1001647881084"  # 正式
         self.chat_id_currency = "-1002100758150"  # 正式
         self.chat_id_game = "-4259391320"
+        self.chat_id_gif = "-1002365056617"
         if (self.is_test):
             self.chat_id_image = "-1001911277875"
             self.chat_id_money = "-1001911277875"
             self.chat_id_currency = "-1001911277875"
             self.chat_id_game = "-1001911277875"
+            self.chat_id_gif = "-1001911277875"
+        config['chat_id_image'] = self.chat_id_image
+        config['chat_id_gif'] = self.chat_id_gif
+        self._config: dict = config
+        self.base = Base(config)
+        self._db = db
 
     # ---------------
 
