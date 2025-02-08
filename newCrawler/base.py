@@ -44,7 +44,11 @@ class Base:
                     if val == 'gif':
                         # Send a gif
                         print("發送GIF : " + url_one)
+
+                        _this_chat_id = (_chat_id if self._config['chat_id_image'] == self._config['chat_id_gif']
+                                         else self._config['chat_id_gif'])
                         self.sendDocument(_chat_id, url_one, "")
+                        self.sendDocument(_this_chat_id, url_one, "")
                     if val == 'mp4':
                         # Send a gif
                         print("發送mp4 : " + url_one)
@@ -219,6 +223,7 @@ class Base:
             # bot.sendDocument(chat_id=_chat_id, document=_file_opened, caption=_caption, parse_mode='html')
             _this_chat_id = (_chat_id if self._config['chat_id_image'] == self._config['chat_id_gif']
                              else self._config['chat_id_gif'])
+            self.sendDocument(_chat_id, _file_opened, _caption)
             self.sendDocument(_this_chat_id, _file_opened, _caption)
         else:
             # Send a Picture

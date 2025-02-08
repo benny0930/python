@@ -43,50 +43,42 @@ class Crawler:
 
     def run(self, type):
         try:
-
-            if (type == "TEST"):
+            if type == "TEST":
                 self.scrape_ptt_detail("Beauty", "-1001911277875", "test", "/bbs/Beauty/M.1730605065.A.784.html")
-                # self.base.sendTG(self.chat_id_game, "msg_sendTG")
                 return
 
             current_time = datetime.now()
-            current_minute = current_time.minute
             print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
             self.base.clear_images_folder()
 
-            if (type == "PTT"):
-                self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image)
-                self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game)
-                self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney", self.chat_id_money)
-                self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
+            type_actions = {
+                "PTT": lambda: [
+                    self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image),
+                    self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game),
+                    self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney", self.chat_id_money),
+                    self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
+                ],
+                "clickme": lambda: self.scrape_clickme(self.chat_id_image, ''),
+                "clickme18": lambda: self.scrape_clickme(self.chat_id_image, '18'),
+                "happy": lambda: self.scrape_happy(),
+                "51": lambda: self.scrape_51(self.chat_id_image),
+                "currency": lambda: self.currency(self.chat_id_currency),
+                "pttLogin": lambda: self.pttLogin(self.chat_id_currency),
+                "ig": lambda: self.scrape_ig(self.chat_id_image),
+                "delete": self.handle_delete
+            }
 
-            if (type == "clickme"):
-                self.scrape_clickme(self.chat_id_image)
+            if type in type_actions:
+                type_actions[type]()
+            else:
+                print(f"Unsupported type: {type}")
 
-            if (type == "happy"):
-                self.scrape_happy()
+        except Exception as e:
+            self.base.sendTG(self.chat_id_currency, f"{type} error: {str(e)}")
 
-            if (type == "51"):
-                self.scrape_51(self.chat_id_image)
-                # self.scrape_51_detail(type, self.chat_id_image, "111", "https://www.51cg1.com/archives/126502/")
-
-            if (type == "currency"):
-                self.currency(self.chat_id_currency)
-
-            if (type == "pttLogin"):
-                self.pttLogin(self.chat_id_currency)
-
-            if (type == "ig"):
-                self.scrape_ig(self.chat_id_image)
-
-            if (type == "delete"):
-                self.base.url = []
-                if (not self.is_test):
-                    sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
-                    db.delete(sql)
-        except:
-            self.base.sendTG(self.chat_id_currency, type + " error : " + sys.exc_info())
         print(f"{type} 執行結束: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
 
     # ---------------
     def get_proxy(self):
@@ -95,6 +87,12 @@ class Crawler:
         return f'{url}:{port}'
 
     # ---------------
+
+    def handle_delete(self):
+        self.base.url = []
+        if not self.is_test:
+            sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
+            db.delete(sql)
 
     def scrape_ptt(self, url, type, chat_id):
         href_list = []
@@ -197,8 +195,11 @@ class Crawler:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
             browser.close()
 
-    def scrape_clickme(self, chat_id):
-        url = "https://r18.clickme.net/c/new/1"
+    def scrape_clickme(self, chat_id , type):
+        if type == '18':
+            url = "https://r18.clickme.net/c/new/1"
+        else:
+            url = "https://clickme.net/c/beauty"
         href_list = []
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=(not self.is_test))
@@ -208,15 +209,16 @@ class Crawler:
                 page.set_viewport_size({"width": 1920, "height": 1080})
             try:
                 page.goto(url)
-                page.wait_for_load_state("load")
-                try:
-                    button = page.locator("#enter")
-                    if "已滿18歲 進入" in button.inner_text():
-                        button.click()
-                        print("按鈕已點擊")
-                except Exception as e:
-                    print(f"出現錯誤: {e}")
-                page.wait_for_load_state("load")
+                if type == '18':
+                    page.wait_for_load_state("load")
+                    try:
+                        button = page.locator("#enter")
+                        if "已滿18歲 進入" in button.inner_text():
+                            button.click()
+                            print("按鈕已點擊")
+                    except Exception as e:
+                        print(f"出現錯誤: {e}")
+                    page.wait_for_load_state("load")
                 elements = page.query_selector_all('.article-list-info-area')
 
                 for element in elements:
@@ -250,9 +252,12 @@ class Crawler:
         print("開始列表" + str(len(href_list)))
         for pair in href_list:
             print(href_value)
-            self.scrape_clickme_detail("clickme", chat_id, pair['title'], pair['href'])
+            if type == '18':
+                self.scrape_clickme_detail("clickme18", chat_id, pair['title'], pair['href'], type)
+            else:
+                self.scrape_clickme_detail("clickme", chat_id, pair['title'], pair['href'], type)
 
-    def scrape_clickme_detail(self, type, chat_id, title, url):
+    def scrape_clickme_detail(self, type, chat_id, title, url, is18):
         print(f"爬取頁面內容 => 標題: {title}\n連結: {url}")
 
         with sync_playwright() as pw1:
@@ -268,15 +273,16 @@ class Crawler:
                     db.insert(sql)
                 url = "https:" + url
                 page.goto(url)
-                page.wait_for_load_state("load")
-                try:
-                    button = page.locator("#enter")
-                    if "已滿18歲 進入" in button.inner_text():
-                        button.click()
-                        print("按鈕已點擊")
-                except Exception as e:
-                    print(f"出現錯誤: {e}")
-                page.wait_for_load_state("load")
+                if is18 == '18':
+                    page.wait_for_load_state("load")
+                    try:
+                        button = page.locator("#enter")
+                        if "已滿18歲 進入" in button.inner_text():
+                            button.click()
+                            print("按鈕已點擊")
+                    except Exception as e:
+                        print(f"出現錯誤: {e}")
+                    page.wait_for_load_state("load")
 
                 # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
                 page.screenshot(path="python_ptt.png")
@@ -542,6 +548,11 @@ class Crawler:
                     sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
                     db.insert(sql)
                 page.goto(url)
+                time.sleep(3)
+                try:
+                    page.locator("#wanrningconfirm").click()
+                except Exception as e:
+                    print(f"出現錯誤: {e}")
                 # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
                 page.screenshot(path="python_ptt.png")
                 with open("python_ptt.png", 'rb') as photo_file:

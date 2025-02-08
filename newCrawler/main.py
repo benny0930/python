@@ -76,6 +76,7 @@ def delete_all_contents(directory):
 
 
 def schedule_tasks(config, crawler):
+    task_list = []
     if config['type'] == "ZH":
         task_list = [
             (60, run_crawler_with_timeout, "happy"),
@@ -86,16 +87,18 @@ def schedule_tasks(config, crawler):
             (1, update_code, None),
             (5, run_crawler_with_timeout, "PTT"),
             (60, run_crawler_with_timeout, "clickme"),
+            (60, run_crawler_with_timeout, "clickme18"),
             (60, run_crawler_with_timeout, "51"),
             ("00:00", run_crawler_with_timeout, "pttLogin"),
             ("03:00", run_crawler_with_timeout, "delete"),
         ]
 
     for interval, func, arg in task_list:
+        job = partial(func, crawler, arg) if arg else func
         if isinstance(interval, int):
-            schedule.every(interval).minutes.do(partial(func, crawler, arg) if arg else func)
+            schedule.every(interval).minutes.do(job)
         else:
-            schedule.every().day.at(interval).do(partial(func, crawler, arg) if arg else func)
+            schedule.every().day.at(interval).do(job)
 
 
 def countdown_timer(config, seconds):
@@ -103,8 +106,7 @@ def countdown_timer(config, seconds):
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         mins, secs = divmod(seconds, 60)
         timer = f'{mins:02}:{secs:02}'
-        # print(f"Next task execution in: {timer}", end="\r")
-        print(f"{current_time} - {config['version']} - Next task execution in: {timer}", end="\r")
+        print(f"{current_time} - {config.get('version', 'unknown')} - Next task execution in: {timer}", end="\r")
         time.sleep(1)
         seconds -= 1
 
@@ -112,8 +114,10 @@ def countdown_timer(config, seconds):
 if __name__ == '__main__':
     check_and_create()
     args = parse_args()
+
     with open(args.config, 'r', encoding='utf-8') as config_file:
-        config = yaml.safe_load(config_file)
+        config = yaml.safe_load(config_file) or {}
+
     config.update({'is_test': args.test, 'type': args.type})
     print(config)
 
@@ -124,6 +128,7 @@ if __name__ == '__main__':
         "TEST": "TEST",
         "PTT": "PTT",
         "clickme": "clickme",
+        "clickme18": "clickme18",
         "51": "51",
         "happy": "happy",
         "pttLogin": "pttLogin",
@@ -134,13 +139,15 @@ if __name__ == '__main__':
     if config['type'] in crawler_mapping:
         run_crawler_with_timeout(crawler, crawler_mapping[config['type']])
     elif config['type'] == "detail":
-        url = "https://www.51cg1.com/archives/146075/"
+        url = "https://www.51cg1.com/archives/179839/"
         crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
     else:
         update_code()
-        crawler_type_arr = ["delete", "pttLogin", "PTT", "clickme", "51"]
+
+        crawler_type_arr = ["delete", "pttLogin", "PTT", "clickme", "clickme18", "51"]
         if config['type'] == "ZH":
-            crawler_type_arr = ["happy","ig"]
+            crawler_type_arr = ["happy", "ig"]
+
         for crawler_type in crawler_type_arr:
             run_crawler_with_timeout(crawler, crawler_type)
 
