@@ -23,20 +23,19 @@ def select(sql):
 
 
 def insert(sql):
-    db = pymysql.connect(host=HOST, user=USER,
-                         password=PASSWORD, database=DATABASE)
-    cursor = db.cursor()
     try:
+        db = pymysql.connect(host=HOST, user=USER, password=PASSWORD, database=DATABASE)
+        cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
-        db.close()
         return True
-    except:
-        print(sql)
-        print("Error: unable to fetch data")
+    except Exception as e:
+        print("SQL Failed:", sql)
+        print("Error:", e)
         db.rollback()
-    db.close()
-    return False
+        return False
+    finally:
+        db.close()
 
 def delete(sql):
     db = pymysql.connect(host=HOST, user=USER,

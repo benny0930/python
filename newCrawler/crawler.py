@@ -24,12 +24,14 @@ class Crawler:
         self.chat_id_currency = "-1002100758150"  # 正式
         self.chat_id_game = "-4259391320"
         self.chat_id_gif = "-1002365056617"
+        self.chat_id_video = "-4779195276"
         if (self.is_test):
             self.chat_id_image = "-1001911277875"
             self.chat_id_money = "-1001911277875"
             self.chat_id_currency = "-1001911277875"
             self.chat_id_game = "-1001911277875"
             self.chat_id_gif = "-1001911277875"
+            self.chat_id_video = "-1001911277875"
         config['chat_id_image'] = self.chat_id_image
         config['chat_id_gif'] = self.chat_id_gif
         self._config: dict = config
@@ -44,8 +46,16 @@ class Crawler:
     def run(self, type):
         try:
             if type == "TEST":
-                self.scrape_ptt_detail("Beauty", "-1001911277875", "test", "/bbs/Beauty/M.1730605065.A.784.html")
+                sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
+                sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, "url", "title")
+                db.insert(sql)
                 return
+                print("TEST")
+                self.is_test = True
+                # self.base.send_photo("-4662654185", "https://avjoy.me/media/avjoytmb/tmb/67947/99.jpg",'123456789', False)
+                self.avjoy("-1001911277875")
+                return
+                # self.scrape_ptt_detail("Beauty", "-1001911277875", "test", "/bbs/Beauty/M.1730605065.A.784.html")
 
             current_time = datetime.now()
             print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -64,6 +74,7 @@ class Crawler:
                 "51": lambda: self.scrape_51(self.chat_id_image),
                 "currency": lambda: self.currency(self.chat_id_currency),
                 "pttLogin": lambda: self.pttLogin(self.chat_id_currency),
+                "avjoy": lambda: self.avjoy(self.chat_id_video),
                 "ig": lambda: self.scrape_ig(self.chat_id_image),
                 "delete": self.handle_delete
             }
@@ -645,3 +656,124 @@ class Crawler:
             #         print(f"資料夾 {content_dir} 不存在。")
             # except Exception as e:
             #     print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
+
+    def avjoy(self, chat_id):
+        base_url = 'https://avjoy.me'
+        href_list = []
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=(not self.is_test))
+            context = browser.new_context()
+            page = context.new_page()
+            if (not self.is_test):
+                page.set_viewport_size({"width": 1920, "height": 1080})
+            try:
+                results = []
+
+                page.goto(base_url+"/videos?page=1")
+
+                # 選取所有的 content-row
+                rows = page.query_selector_all("div.content-left div.row.content-row div")
+                print(f"找到 {len(rows)} 筆資料")
+                # page.screenshot(path="python_ptt.png")
+                # with open("python_ptt.png", 'rb') as photo_file:
+                #     self.base.send_photo(chat_id, photo_file, '<a href="' + "222" + '">' + "111" + '</a>', True)
+                for row in rows:
+                    link = row.query_selector("a")
+                    img = row.query_selector("a img")
+
+                    if link and img:
+                        href = link.get_attribute("href")
+                        img_src = img.get_attribute("src")
+                        img_title = img.get_attribute("title")
+
+                        print(f"標題: {img_title}\n連結: {href}\n")
+                        href_value = "" + href
+                        if href_value in self.base.url:
+                            print(f'已存在(base)\n')
+                            continue
+                        self.base.url.append(href_value)
+
+                        db_results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href))
+                        if len(db_results) < 1:
+                            results.append({
+                                "href": href,
+                                "img_src": img_src,
+                                "title": img_title
+                            })
+                        else:
+                            print(f'已存在({db_results})\n')
+                            continue
+                browser.close()
+
+                print("開始detail")
+
+                for item in results:
+                    print("------------------")
+                    print(item)
+                    found = self.contains_video_key(item["title"])
+                    if found:
+                        browser = pw.chromium.launch(headless=(not self.is_test))
+                        context = browser.new_context()
+                        page = context.new_page()
+                        if (not self.is_test):
+                            page.set_viewport_size({"width": 1920, "height": 1080})
+                        try:
+                            if (not self.is_test):
+                                sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
+                                sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
+                                "avjoy", item["href"], item["title"])
+                                db.insert(sql)
+                            page.goto(base_url + item["href"])
+                            # page.screenshot(path="python_ptt.png")
+
+                            page.wait_for_selector('div.vjs-poster')
+
+                            poster_element = page.query_selector('div.vjs-poster')
+                            poster_element.screenshot(path="python_ptt.png")
+
+                            with open("python_ptt.png", 'rb') as photo_file:
+                                self.base.send_photo(chat_id, photo_file,
+                                                     '<a href="' + base_url + item["href"] + '">' + item["title"] + '</a>', True)
+                        except Exception as e:
+                            print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
+                        browser.close()
+                    else:
+                        print(f"Item {item} is not in the video_key array.")
+
+                    # # 原始圖片 URL
+                    # image_url = item["img_src"]
+                    #
+                    # # 解析圖片 URL，將 .jpg 改為 .webm
+                    # video_url = image_url.rsplit('/', 1)[0] + "/video.webm"  # 去掉圖片的文件名並加上 video.webm
+                    #
+                    # print(f"視頻 URL: {video_url}")
+                    # self.base.sendDocument(chat_id, video_url, "")
+                    # return
+                    #
+                    # self.base.send_photo(chat_id, item["img_src"], '<a href="' + item["href"] + '">' + item["img_title"] + '</a>', False)
+            except Exception as e:
+                print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
+
+
+
+        # print("開始列表" + str(len(href_list)))
+        # for pair in href_list:
+        #     print(href_value)
+        #     self.scrape_51_detail("51", chat_id, pair['title'], pair['href'])
+
+    def contains_video_key(self, title):
+        found = False  # 初始化變數為 False
+        for key in self._config['video_key']:
+            if "," in key:
+                # 把 key 內的 "," 拆分成多個條件
+                sub_keys = key.split(",")
+                # 確保 title 必須包含所有拆分後的字串
+                if all(sub_key in title for sub_key in sub_keys):
+                    found = True
+                    break  # 找到符合條件的就跳出迴圈
+            else:
+                # 沒有 "," 則檢查 title 是否包含 key
+                if key in title:
+                    found = True
+                    break  # 找到符合條件的就跳出迴圈
+        return found

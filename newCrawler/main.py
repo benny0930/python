@@ -86,6 +86,7 @@ def schedule_tasks(config, crawler):
         task_list = [
             (1, update_code, None),
             (5, run_crawler_with_timeout, "PTT"),
+            (5, run_crawler_with_timeout, "avjoy"),
             (60, run_crawler_with_timeout, "clickme"),
             (60, run_crawler_with_timeout, "clickme18"),
             (60, run_crawler_with_timeout, "51"),
@@ -134,6 +135,7 @@ if __name__ == '__main__':
         "pttLogin": "pttLogin",
         "ig": "ig",
         "delete": "delete",
+        "avjoy": "avjoy",
     }
 
     if config['type'] in crawler_mapping:
@@ -144,7 +146,7 @@ if __name__ == '__main__':
     else:
         update_code()
 
-        crawler_type_arr = ["delete", "pttLogin", "PTT", "clickme", "clickme18", "51"]
+        crawler_type_arr = ["delete", "pttLogin", "PTT", "clickme", "clickme18", "51", "avjoy"]
         if config['type'] == "ZH":
             crawler_type_arr = ["happy", "ig"]
 

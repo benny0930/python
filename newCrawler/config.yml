@@ -1,6 +1,24 @@
 sample: "test"
 version: "v1.0.24"
 ptt_account: [
-  {account: kailovemoon, password: 111111},
-  {account: kiey, password: 111111},
+  { account: kailovemoon, password: 111111 },
+  { account: kiey, password: 111111 },
+]
+video_key: [
+  "中文,无码",
+  "中文,破解",
+  "字幕,无码",
+  "字幕,破解",
+  "うんぱい",
+  "unpai",
+  "Unpai",
+  "あんざいらら",
+  "宇都宮紫苑",
+  "宇都宫紫苑",
+  "RION",
+  "宇都宮しをん",
+  "安齋拉拉",
+  "安斋拉拉",
+  "安齋らら",
+  "美園和花",
 ]
