@@ -40,6 +40,11 @@ class Crawler:
 
     # ---------------
 
+    def get_proxy(self):
+        url = 'http://172.104.80.118'
+        port = 3128
+        return f'{url}:{port}'
+
     def setup(self):
         pass
 

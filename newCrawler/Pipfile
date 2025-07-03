@@ -20,6 +20,7 @@ pttlibrary = "*"
 downloads = "*"
 instaloader = "*"
 mysql-connector-python = "*"
+telethon = "*"
 
 [dev-packages]
 
