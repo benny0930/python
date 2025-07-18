@@ -85,7 +85,7 @@ chat_names = [
     "super ks",
     "T-E 新增vpn白名單群",
     "娛樂城部署通知",
-    "E_Login_Game_Backend",
+    # "E_Login_Game_Backend",
     "T處-娛樂城專用機器人",
     "9J 滿冠彩票",
     "T處-娛樂城查詢群",
