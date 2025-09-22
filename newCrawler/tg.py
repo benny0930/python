@@ -83,21 +83,19 @@ async def del_my_messages(del_name):
 chat_names = [
     "88.BRIT",
     "super ks",
-    "T-E 新增vpn白名單群",
-    "娛樂城部署通知",
-    # "E_Login_Game_Backend",
-    "T處-娛樂城專用機器人",
-    "9J 滿冠彩票",
-    "T處-娛樂城查詢群",
-    "佰樂透客戶串接",
+    "SuperKs 閒聊區",
     "大佬們",
-    "前端小群",
-    "UP-娛樂城 後端技術",
+    "9J 滿冠彩票",
+    "佰樂透客戶串接",
+    "娛樂城部署通知",
+    "T-E 新增vpn白名單群",
     "（上版用）Super Backend R&D",
-    "UP-PM&RD同步群",
+    "前端小群",
     "客服問題怎麼搞-交接",
     "新團隊🌤新氣象",
-    "UP-娛樂城 客服 交流群"
+    "UP-娛樂城 後端技術",
+    "UP-PM&RD同步群",
+    "UP-娛樂城 客服 交流群",
 ]
 
 async def purge_my_msgs(chat_entity, client, me):

@@ -49,52 +49,43 @@ class Crawler:
         pass
 
     def run(self, type):
+        current_time = datetime.now()
+        print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
         try:
             if type == "TEST":
-                sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-                sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, "url", "title")
-                db.insert(sql)
-                return
-                print("TEST")
-                self.is_test = True
-                # self.base.send_photo("-4662654185", "https://avjoy.me/media/avjoytmb/tmb/67947/99.jpg",'123456789', False)
-                self.avjoy("-1001911277875")
-                return
-                # self.scrape_ptt_detail("Beauty", "-1001911277875", "test", "/bbs/Beauty/M.1730605065.A.784.html")
+                img_path = r"C:\Code\benny\python\newCrawler\python_ptt.png"
+                img_url = self.base.upload_to_laptop_up(img_path)
+                print(img_url)
 
-            current_time = datetime.now()
-            print(f"{type} 開始執行: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
-            self.base.clear_images_folder()
-
-            type_actions = {
-                "PTT": lambda: [
-                    self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image),
-                    self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game),
-                    self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney", self.chat_id_money),
-                    self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
-                ],
-                "clickme": lambda: self.scrape_clickme(self.chat_id_image, ''),
-                "clickme18": lambda: self.scrape_clickme(self.chat_id_image, '18'),
-                "happy": lambda: self.scrape_happy(),
-                "51": lambda: self.scrape_51(self.chat_id_image),
-                "currency": lambda: self.currency(self.chat_id_currency),
-                "pttLogin": lambda: self.pttLogin(self.chat_id_currency),
-                "avjoy": lambda: self.avjoy(self.chat_id_video),
-                "ig": lambda: self.scrape_ig(self.chat_id_image),
-                "delete": self.handle_delete
-            }
-
-            if type in type_actions:
-                type_actions[type]()
             else:
-                print(f"Unsupported type: {type}")
+                self.base.clear_images_folder()
+                type_actions = {
+                    "PTT": lambda: [
+                        self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image),
+                        self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game),
+                        self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney",
+                                        self.chat_id_money),
+                        self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
+                    ],
+                    "clickme": lambda: self.scrape_clickme(self.chat_id_image, ''),
+                    "clickme18": lambda: self.scrape_clickme(self.chat_id_image, '18'),
+                    "happy": lambda: self.scrape_happy(),
+                    "51": lambda: self.scrape_51(self.chat_id_image),
+                    "currency": lambda: self.currency(self.chat_id_currency),
+                    "pttLogin": lambda: self.pttLogin(self.chat_id_currency),
+                    "avjoy": lambda: self.avjoy(self.chat_id_video),
+                    "ig": lambda: self.scrape_ig(self.chat_id_image),
+                    "delete": self.handle_delete
+                }
 
+                if type in type_actions:
+                    type_actions[type]()
+                else:
+                    print(f"Unsupported type: {type}")
         except Exception as e:
             self.base.sendTG(self.chat_id_currency, f"{type} error: {str(e)}")
 
         print(f"{type} 執行結束: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-
 
     # ---------------
     def get_proxy(self):
@@ -170,10 +161,11 @@ class Crawler:
             if (not self.is_test):
                 page.set_viewport_size({"width": 1920, "height": 1080})
             try:
+                ptt_id = 0
                 if (not self.is_test):
                     sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
                     sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
-                    db.insert(sql)
+                    ptt_id = db.insert(sql)
                 url = "https://www.ptt.cc/" + url
                 print(url)
                 page.goto(url)
@@ -183,8 +175,13 @@ class Crawler:
 
                 # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
                 page.screenshot(path="python_ptt.png")
-                with open("python_ptt.png", 'rb') as photo_file:
-                    self.base.send_photo(chat_id, photo_file, '<a href="' + url + '">' + title + '</a>', True)
+                img_url = self.base.upload_to_laptop_up("python_ptt.png")
+                print(img_url)
+                sql_main = """
+                           INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
+                           VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                           """
+                main_id = db.insert(sql_main, (ptt_id, title, type, img_url))
 
                 if (self.is_test):
                     print(type)
@@ -202,16 +199,22 @@ class Crawler:
                         if href_value.find('www.ptt.cc') >= 0:
                             print(f'{href_value} => 跳過\n')
                             continue
-                        send_links.append(href_value)
+                        sql_main = """
+                                   INSERT INTO `fa_ptt_images` (`main_id`, `image`, `createtime`, `updatetime`)
+                                   VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                                   """
+                        db.insert(sql_main, (main_id, href_value))
                     if (self.is_test):
                         print(send_links)
                     self.base.send_media_group(chat_id, send_links)
 
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
+                if (self.is_test):
+                    exit(1)
             browser.close()
 
-    def scrape_clickme(self, chat_id , type):
+    def scrape_clickme(self, chat_id, type):
         if type == '18':
             url = "https://r18.clickme.net/c/new/1"
         else:
@@ -283,10 +286,11 @@ class Crawler:
             if (not self.is_test):
                 page.set_viewport_size({"width": 1920, "height": 1080})
             try:
+                ptt_id = 0
                 if (not self.is_test):
                     sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
                     sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
-                    db.insert(sql)
+                    ptt_id = db.insert(sql)
                 url = "https:" + url
                 page.goto(url)
                 if is18 == '18':
@@ -302,8 +306,13 @@ class Crawler:
 
                 # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
                 page.screenshot(path="python_ptt.png")
-                with open("python_ptt.png", 'rb') as photo_file:
-                    self.base.send_photo(chat_id, photo_file, '<a href="' + url + '">' + title + '</a>', True)
+                img_url = self.base.upload_to_laptop_up("python_ptt.png")
+                print(img_url)
+                sql_main = """
+                           INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
+                           VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                           """
+                main_id = db.insert(sql_main, (ptt_id, title, type, img_url))
 
                 send_links = []
                 article_element = page.locator("#article-detail-content")
@@ -311,9 +320,11 @@ class Crawler:
                 for image in images:
                     # 获取图像的 src 属性
                     image_src = "https:" + image.get_attribute('src')
-                    print(f"圖片連結: {image_src}")
-                    send_links.append(image_src)
-                self.base.send_media_group(chat_id, send_links)
+                    sql_main = """
+                               INSERT INTO `fa_ptt_images` (`main_id`, `image`, `createtime`, `updatetime`)
+                               VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                               """
+                    db.insert(sql_main, (main_id, image_src))
 
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
@@ -559,10 +570,11 @@ class Crawler:
             if (not self.is_test):
                 page.set_viewport_size({"width": 1920, "height": 1080})
             try:
+                ptt_id = 0
                 if (not self.is_test):
                     sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
                     sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
-                    db.insert(sql)
+                    ptt_id = db.insert(sql)
                 page.goto(url)
                 time.sleep(3)
                 try:
@@ -571,19 +583,28 @@ class Crawler:
                     print(f"出現錯誤: {e}")
                 # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
                 page.screenshot(path="python_ptt.png")
-                with open("python_ptt.png", 'rb') as photo_file:
-                    self.base.send_photo(chat_id, photo_file, '<a href="' + url + '">' + title + '</a>', True)
+                img_url = self.base.upload_to_laptop_up("python_ptt.png")
+                if (not img_url):
+                    return
+                sql_main = """
+                           INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
+                           VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                           """
+                main_id = db.insert(sql_main, (ptt_id, title, type, img_url))
                 no_send_links = []
                 send_links = []
                 archive = page.wait_for_selector(".post-content")
                 images = archive.query_selector_all("img")
 
                 # 获取 div.article-bottom-apps 内部的 img 元素
+                # 先把不想發送的底部圖片收集起來
                 article_bottom_apps = archive.query_selector(".article-bottom-apps")
                 if article_bottom_apps:
                     bottom_images = set(article_bottom_apps.query_selector_all("img"))
                 else:
                     bottom_images = set()
+
+                no_send_links = []
                 for image in bottom_images:
                     no_send_links.append(image.get_attribute('src'))
 
@@ -591,7 +612,18 @@ class Crawler:
                     # 获取图像的 src 属性
                     image_src = image.get_attribute('src')
                     if image_src not in no_send_links:
-                        send_links.append(image_src)
+                        local_path = self.base.save_image_to_file(image_src, "python_ptt.png")
+                        if not local_path:
+                            continue
+                        # 上傳
+                        img_url = self.base.upload_to_laptop_up(local_path)
+                        if not img_url:
+                            continue
+                        sql_main = """
+                                   INSERT INTO `fa_ptt_images` (`main_id`, `image`, `createtime`, `updatetime`)
+                                   VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                                   """
+                        db.insert(sql_main, (main_id, image_src))
                 self.base.send_media_group(chat_id, send_links)
 
             except Exception as e:
@@ -630,7 +662,7 @@ class Crawler:
                         if (not self.is_test):
                             sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
                             sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
-                            "IG", file_url, file_name)
+                                "IG", file_url, file_name)
                             db.insert(sql)
                         file_path = os.path.join(root, file)
                         print(f"副檔名:{file_extension}")
@@ -673,8 +705,7 @@ class Crawler:
                 page.set_viewport_size({"width": 1920, "height": 1080})
             try:
                 results = []
-
-                page.goto(base_url+"/videos?page=1")
+                page.goto(base_url + "/videos?page=1")
 
                 # 選取所有的 content-row
                 rows = page.query_selector_all("div.content-left div.row.content-row div")
@@ -715,7 +746,9 @@ class Crawler:
                 for item in results:
                     print("------------------")
                     print(item)
-                    found = self.contains_video_key(item["title"])
+                    url = item["href"]
+                    title = item["title"]
+                    found = self.contains_video_key(title)
                     if found:
                         browser = pw.chromium.launch(headless=(not self.is_test))
                         context = browser.new_context()
@@ -723,22 +756,27 @@ class Crawler:
                         if (not self.is_test):
                             page.set_viewport_size({"width": 1920, "height": 1080})
                         try:
+                            ptt_id = 0
+
                             if (not self.is_test):
                                 sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
                                 sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
-                                "avjoy", item["href"], item["title"])
-                                db.insert(sql)
-                            page.goto(base_url + item["href"])
+                                    "avjoy", url, title)
+                                ptt_id = db.insert(sql)
+                            page.goto(base_url + url)
                             # page.screenshot(path="python_ptt.png")
 
                             page.wait_for_selector('div.vjs-poster')
 
                             poster_element = page.query_selector('div.vjs-poster')
                             poster_element.screenshot(path="python_ptt.png")
+                            img_url = self.base.upload_to_laptop_up("python_ptt.png")
+                            sql_main = """
+                                       INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
+                                       VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                                       """
+                            db.insert(sql_main, (ptt_id, title, "avjoy", img_url))
 
-                            with open("python_ptt.png", 'rb') as photo_file:
-                                self.base.send_photo(chat_id, photo_file,
-                                                     '<a href="' + base_url + item["href"] + '">' + item["title"] + '</a>', True)
                         except Exception as e:
                             print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
                         browser.close()
@@ -759,14 +797,15 @@ class Crawler:
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
 
-
-
         # print("開始列表" + str(len(href_list)))
         # for pair in href_list:
         #     print(href_value)
         #     self.scrape_51_detail("51", chat_id, pair['title'], pair['href'])
 
     def contains_video_key(self, title):
+
+        return True
+
         found = False  # 初始化變數為 False
         for key in self._config['video_key']:
             if "," in key:

@@ -12,6 +12,9 @@ from io import BytesIO
 import sys
 import base64
 import json
+import mimetypes
+from io import BytesIO
+
 
 
 class Base:
@@ -257,3 +260,94 @@ class Base:
             return data
         else:
             return None
+
+    def upload_to_smms(self, img_path):
+        url = "https://sm.ms/api/v2/upload"
+        with open(img_path, "rb") as f:
+            files = {"smfile": f}
+            res = requests.post(url, files=files)
+            data = res.json()
+            if data["success"]:
+                return data["data"]["url"]  # 圖片的直鏈網址
+            else:
+                print("Upload failed:", data)
+                return None
+
+    def upload_to_gofile(self, img_path):
+        url = "https://upload.gofile.io/uploadfile"
+        with open(img_path, "rb") as f:
+            files = {"file": f}
+            res = requests.post(url, files=files)
+            try:
+                data = res.json()
+                print(data)
+            except Exception:
+                print("Upload failed, not JSON:", res.text[:200])
+                return None
+
+            if data.get("status") == "ok":
+                file_id = data["data"]["id"]
+                file_name = data["data"]["name"]
+                server = data["data"]["servers"][0]  # 例如 store-na-phx-1
+                direct_link = f"https://{server}.gofile.io/download/{file_id}/{file_name}"
+                return direct_link
+            else:
+                print("Upload failed:", data)
+                return None
+
+    def upload_to_laptop_up(self, img_path):
+        url = "http://benny.test:8081/api/common/upload"
+
+        # 根據檔案副檔名自動判斷 mimetype
+        mime_type, _ = mimetypes.guess_type(img_path)
+        if not mime_type:
+            mime_type = "application/octet-stream"  # fallback
+
+        with open(img_path, "rb") as f:
+            # 注意要傳 tuple: (filename, fileobj, mimetype)
+            files = {"file": (img_path.split("\\")[-1], f, mime_type)}
+
+            try:
+                res = requests.post(url, files=files)
+                data = res.json()
+                print("Upload response:", data)
+                if data.get("code") in (0, 1):  # 根據 FastAdmin 回傳
+                    return data.get("data", {}).get("fullurl")  # 回傳 fullurl
+                else:
+                    print("Upload failed:", data)
+                    return None
+            except Exception as e:
+                print("Upload failed, not JSON or error:", e, res.text[:200])
+                return None
+
+    def save_image_to_file(self, image_src, save_path="python_ptt.png"):
+        """
+        將遠端圖片或超長 src 存成本地檔案
+        - image_src: 圖片 URL 或 base64 資料
+        - save_path: 要存的本地檔案路徑
+        回傳: 存檔路徑，失敗返回 None
+        """
+        try:
+            # 如果是 URL，下載
+            if image_src.startswith("http"):
+                resp = requests.get(image_src, timeout=10)
+                resp.raise_for_status()
+                with open(save_path, "wb") as f:
+                    f.write(resp.content)
+            # 如果是 base64 字串
+            elif image_src.startswith("data:image"):
+                import base64
+                header, encoded = image_src.split(",", 1)
+                data = base64.b64decode(encoded)
+                with open(save_path, "wb") as f:
+                    f.write(data)
+            else:
+                print("不支援的圖片來源")
+                return None
+            return save_path
+        except Exception as e:
+            print("存圖片失敗:", e)
+            return None
+
+
+

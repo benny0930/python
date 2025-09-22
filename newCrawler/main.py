@@ -107,7 +107,7 @@ def countdown_timer(config, seconds):
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         mins, secs = divmod(seconds, 60)
         timer = f'{mins:02}:{secs:02}'
-        print(f"{current_time} - {config.get('version', 'unknown')} - Next task execution in: {timer}", end="\r")
+        print(f"{current_time} - {config.get('version', 'unknown')} - Next task: {timer}", end="\r")
         time.sleep(1)
         seconds -= 1
 
