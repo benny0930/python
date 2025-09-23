@@ -98,8 +98,13 @@ class Crawler:
     def handle_delete(self):
         self.base.url = []
         if not self.is_test:
+            sql = "DELETE FROM fa_ptt_images WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
+            db.delete(sql)
+            sql = "DELETE FROM fa_ptt_main WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
+            db.delete(sql)
             sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
             db.delete(sql)
+            self.base.delete_to_laptop_up(2)
 
     def scrape_ptt(self, url, type, chat_id):
         href_list = []
@@ -125,14 +130,19 @@ class Crawler:
 
                     print(f"標題: {title_text}\n連結: {href_value}")
 
-                    if title_text.find('公告') >= 0 or title_text.find('大尺碼') >= 0:
-                        print(f'跳過\n')
-                        continue
-
                     if href_value in self.base.url:
                         print(f'已存在(base)\n')
                         continue
                     self.base.url.append(href_value)
+
+                    if title_text.find('公告') >= 0 or title_text.find('大尺碼') >= 0:
+                        print(f'跳過\n')
+                        continue
+
+                    if type == "Gamesale" and title_text.find('NS') < 0:
+                        print(f'Gamesale 非 NS 跳過\n')
+                        continue
+
                     results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href_value))
                     if len(results) < 1:
                         href_list.append({'title': title_text, 'href': href_value})
@@ -623,7 +633,7 @@ class Crawler:
                                    INSERT INTO `fa_ptt_images` (`main_id`, `image`, `createtime`, `updatetime`)
                                    VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
                                    """
-                        db.insert(sql_main, (main_id, image_src))
+                        db.insert(sql_main, (main_id, img_url))
                 self.base.send_media_group(chat_id, send_links)
 
             except Exception as e:
@@ -803,9 +813,6 @@ class Crawler:
         #     self.scrape_51_detail("51", chat_id, pair['title'], pair['href'])
 
     def contains_video_key(self, title):
-
-        return True
-
         found = False  # 初始化變數為 False
         for key in self._config['video_key']:
             if "," in key:

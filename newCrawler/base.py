@@ -349,5 +349,23 @@ class Base:
             print("存圖片失敗:", e)
             return None
 
+    def delete_to_laptop_up(self, day=7):
+        """
+        呼叫 FastAdmin /api/common/delete 刪除 day 天前的上傳檔案
+        - day: int, 要刪除的天數，預設 7
+        回傳: API 回傳的 JSON dict，失敗返回 None
+        """
+        url = "http://benny.test:8081/api/common/delete"
+        params = {"day": day}
+
+        try:
+            res = requests.get(url, params=params, timeout=10)
+            data = res.json()
+            print("Delete response:", data)
+            return data
+        except Exception as e:
+            print("Delete request failed:", e, getattr(res, "text", "")[:200])
+            return None
+
 
 
