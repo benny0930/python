@@ -367,5 +367,5 @@ class Base:
             print("Delete request failed:", e, getattr(res, "text", "")[:200])
             return None
 
-
-
+    def md5_hash(self, text: str) -> str:
+        return hashlib.md5(text.encode("utf-8")).hexdigest()

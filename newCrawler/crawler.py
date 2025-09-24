@@ -4,16 +4,19 @@ import db
 import json
 import re
 import os
-import shutil
 import instaloader
 import time
-from telegram import InputMediaPhoto
+import sys
+import shutil
+import hashlib
+
 
 from base import Base
-from playwright.sync_api import sync_playwright
 from datetime import datetime
 from PTTLibrary import PTT
-import sys
+from playwright.sync_api import sync_playwright
+from pathlib import Path
+from telegram import InputMediaPhoto
 
 
 class Crawler:
@@ -74,7 +77,7 @@ class Crawler:
                     "currency": lambda: self.currency(self.chat_id_currency),
                     "pttLogin": lambda: self.pttLogin(self.chat_id_currency),
                     "avjoy": lambda: self.avjoy(self.chat_id_video),
-                    "ig": lambda: self.scrape_ig(self.chat_id_image),
+                    "ig": lambda: self.scrape_ig("IG"),
                     "delete": self.handle_delete
                 }
 
@@ -640,7 +643,7 @@ class Crawler:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
             browser.close()
 
-    def scrape_ig(self, chat_id):
+    def scrape_ig_back(self, chat_id):
         instagram_usernames = {
             "my._.chuuu": "李珠珢",
         }
@@ -703,6 +706,126 @@ class Crawler:
             #         print(f"資料夾 {content_dir} 不存在。")
             # except Exception as e:
             #     print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
+
+    def scrape_ig(self, type):
+        ig_list = [
+            "https://www.instagram.com/0724.32/",
+            "https://www.instagram.com/yyyoungggggg/",
+        ]
+
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=(not self.is_test))
+            context = browser.new_context()
+            page = context.new_page()
+            if not self.is_test:
+                page.set_viewport_size({"width": 1920, "height": 1080})
+
+            page.goto("https://snapinsta.to/zh-tw", timeout=60000)
+
+            for ig_url in ig_list:
+                print("處理:", ig_url)
+                # 填入 IG 連結並點下載
+                page.fill("#s_input", ig_url)
+                page.click('button:has-text("下載")')
+
+                # 等待 download 區出現
+                page.wait_for_selector(".download-box", timeout=20000)
+
+                # 嘗試關閉彈窗（若有）
+                try:
+                    page.click("#closeModalBtn", timeout=3000)
+                except:
+                    pass
+
+                # 由上而下逐張爬，遇 loader 則 PageDown 並 retry
+                collected = []
+                i = 0
+                # 若多次 page down 也沒新增就結束（避免無限迴圈）
+                page_down_attempts = 0
+                MAX_PAGE_DOWN_ATTEMPTS = 6
+
+                while True:
+                    imgs = page.query_selector_all(".download-box img")
+                    # 如果目前索引超過現有 img 長度，嘗試再滾動幾次載入更多
+                    if i >= len(imgs):
+                        if page_down_attempts >= 3:
+                            # 沒看到更多元素，結束
+                            break
+                        page.keyboard.press("PageDown")
+                        time.sleep(0.8)
+                        page_down_attempts += 1
+                        continue
+
+                    # scroll 到該 img，使其進入 viewport（以觸發 lazy load）
+                    img = imgs[i]
+                    page.evaluate("(el) => el.scrollIntoView({block: 'center'})", img)
+                    time.sleep(5)  # 等待 lazy load 啟動
+
+                    # 優先取 src，沒有再取 data-src
+                    src = img.get_attribute("src") or img.get_attribute("data-src") or ""
+                    src = src.strip() if src else ""
+
+                    # 如果是 loader（或還空的），代表要往下一頁觸發載入
+                    if "loader.gif" in src or src == "" or src.endswith("/imgs/loader.gif"):
+                        # page down 並等待新圖片產生
+                        page.keyboard.press("PageDown")
+                        time.sleep(5)
+                        # 增加 page down 嘗試計數，避免卡死
+                        page_down_attempts += 1
+                        if page_down_attempts > MAX_PAGE_DOWN_ATTEMPTS:
+                            # 若一直沒反應，當作已到底
+                            break
+                        # 不增加 i，重試同一 index（因為該位置可能剛剛是 loader）
+                        continue
+
+                    # 否則為有效圖片，加入結果並繼續下一張
+                    if src not in collected:
+                        md5_value = self.base.md5_hash(src)
+
+                        if md5_value in self.base.url:
+                            print(f'已存在(base)\n')
+                            continue
+                        self.base.url.append(md5_value)
+
+                        results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (md5_value))
+                        if len(results) > 0:
+                            print(f'已存在({results})\n')
+                            continue
+
+                        local_path = self.base.save_image_to_file(src, "python_ptt.png")
+                        if not local_path:
+                            continue
+                        # 上傳
+                        img_url = self.base.upload_to_laptop_up(local_path)
+                        if not img_url:
+                            continue
+
+                        sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
+                        sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, md5_value,
+                                                                                                     ig_url)
+                        ptt_id = db.insert(sql)
+
+                        sql_main = """
+                                   INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
+                                   VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+                                   """
+                        db.insert(sql_main, (ptt_id, ig_url, type, img_url))
+
+                        collected.append(src)
+
+                    i += 1
+                    # 有成功新增就把 page_down_attempts 重置
+                    page_down_attempts = 0
+
+                # 輸出該 IG 的所有圖片連結
+                print(f"已收集 {len(collected)} 張圖片：")
+                for s in collected:
+                    print(s)
+
+                # 小停頓，避免被當成機器人
+                time.sleep(10)
+
+            browser.close()
 
     def avjoy(self, chat_id):
         base_url = 'https://avjoy.me'
