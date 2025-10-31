@@ -3,53 +3,23 @@ import inspect
 import db
 import json
 import re
-import os
-import instaloader
 import time
-import sys
-import shutil
-import hashlib
-
 
 from base import Base
 from datetime import datetime
 from PTTLibrary import PTT
 from playwright.sync_api import sync_playwright
-from pathlib import Path
-from telegram import InputMediaPhoto
 
 
 class Crawler:
+
     def __init__(self, config, ):
         self.is_test = config['is_test']
-        self.chat_id_image = "-1001932657196"  # 正式
-        self.chat_id_money = "-1001647881084"  # 正式
-        self.chat_id_currency = "-1002100758150"  # 正式
-        self.chat_id_game = "-4259391320"
-        self.chat_id_gif = "-1002365056617"
-        self.chat_id_video = "-4779195276"
-        if (self.is_test):
-            self.chat_id_image = "-1001911277875"
-            self.chat_id_money = "-1001911277875"
-            self.chat_id_currency = "-1001911277875"
-            self.chat_id_game = "-1001911277875"
-            self.chat_id_gif = "-1001911277875"
-            self.chat_id_video = "-1001911277875"
-        config['chat_id_image'] = self.chat_id_image
-        config['chat_id_gif'] = self.chat_id_gif
         self._config: dict = config
         self.base = Base(config)
         self._db = db
 
     # ---------------
-
-    def get_proxy(self):
-        url = 'http://172.104.80.118'
-        port = 3128
-        return f'{url}:{port}'
-
-    def setup(self):
-        pass
 
     def run(self, type):
         current_time = datetime.now()
@@ -63,53 +33,40 @@ class Crawler:
             else:
                 self.base.clear_images_folder()
                 type_actions = {
+                    "delete": lambda: self.handle_delete(),
+                    "pttLogin": lambda: self.pttLogin(),
                     "PTT": lambda: [
-                        self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty", self.chat_id_image),
-                        self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale", self.chat_id_game),
-                        self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney",
-                                        self.chat_id_money),
-                        self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale", self.chat_id_money)
+                        self.scrape_ptt("https://www.ptt.cc/bbs/Beauty/index.html", "Beauty"),
+                        self.scrape_ptt("https://www.ptt.cc/bbs/Gamesale/index.html", "Gamesale"),
+                        self.scrape_ptt("https://www.ptt.cc/bbs/Lifeismoney/index.html", "Lifeismoney"),
+                        self.scrape_ptt("https://www.ptt.cc/bbs/forsale/index.html", "forsale")
                     ],
-                    "clickme": lambda: self.scrape_clickme(self.chat_id_image, ''),
-                    "clickme18": lambda: self.scrape_clickme(self.chat_id_image, '18'),
-                    "happy": lambda: self.scrape_happy(),
-                    "51": lambda: self.scrape_51(self.chat_id_image),
-                    "currency": lambda: self.currency(self.chat_id_currency),
-                    "pttLogin": lambda: self.pttLogin(self.chat_id_currency),
-                    "avjoy": lambda: self.avjoy(self.chat_id_video),
-                    "ig": lambda: self.scrape_ig("IG"),
-                    "delete": self.handle_delete
+                    "clickme": lambda: self.scrape_clickme(''),
+                    "clickme18": lambda: self.scrape_clickme('18'),
+                    "51": lambda: self.scrape_51(),
+                    "avjoy": lambda: self.avjoy(),
                 }
 
                 if type in type_actions:
                     type_actions[type]()
                 else:
                     print(f"Unsupported type: {type}")
+
         except Exception as e:
-            self.base.sendTG(self.chat_id_currency, f"{type} error: {str(e)}")
+            print(f"{type} error: {str(e)}")
 
         print(f"{type} 執行結束: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-    # ---------------
-    def get_proxy(self):
-        url = 'http://172.104.85.146'  # X1
-        port = 3128
-        return f'{url}:{port}'
-
-    # ---------------
 
     def handle_delete(self):
         self.base.url = []
         if not self.is_test:
-            sql = "DELETE FROM fa_ptt_images WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
-            db.delete(sql)
-            sql = "DELETE FROM fa_ptt_main WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
-            db.delete(sql)
-            sql = "DELETE FROM fa_ptt WHERE createtime < UNIX_TIMESTAMP(NOW() - INTERVAL 2 DAY);"
-            db.delete(sql)
-            self.base.delete_to_laptop_up(2)
+            two_days_ago = int(time.time()) - 2 * 24 * 60 * 60
+            db.handle_delete(two_days_ago)
+            self.base.delete_to_laptop_up(3)
 
-    def scrape_ptt(self, url, type, chat_id):
+    # ---------------
+
+    def scrape_ptt(self, url, type):
         href_list = []
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=(not self.is_test))
@@ -146,11 +103,9 @@ class Crawler:
                         print(f'Gamesale 非 NS 跳過\n')
                         continue
 
-                    results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href_value))
+                    results = db.select_fa_ptt(href_value)
                     if len(results) < 1:
                         href_list.append({'title': title_text, 'href': href_value})
-
-                        # self.scrape_ptt_detail("Beauty", title_text, "https://www.ptt.cc" + href_value)
                     else:
                         print(f'已存在({results})\n')
                         continue
@@ -162,9 +117,9 @@ class Crawler:
         print("開始列表" + str(len(href_list)))
         for pair in href_list:
             print(href_value)
-            self.scrape_ptt_detail(type, chat_id, pair['title'], pair['href'])
+            self.scrape_ptt_detail(type, pair['title'], pair['href'])
 
-    def scrape_ptt_detail(self, type, chat_id, title, url):
+    def scrape_ptt_detail(self, type, title, url):
         print(f"爬取頁面內容 => 標題: {title}\n連結: {url}")
 
         with sync_playwright() as pw1:
@@ -176,9 +131,7 @@ class Crawler:
             try:
                 ptt_id = 0
                 if (not self.is_test):
-                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-                    sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
-                    ptt_id = db.insert(sql)
+                    ptt_id = db.insert_fa_ptt(type, url, title)
                 url = "https://www.ptt.cc/" + url
                 print(url)
                 page.goto(url)
@@ -186,15 +139,11 @@ class Crawler:
                 page.goto(url)
                 page.wait_for_load_state("load")
 
-                # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
                 page.screenshot(path="python_ptt.png")
                 img_url = self.base.upload_to_laptop_up("python_ptt.png")
                 print(img_url)
-                sql_main = """
-                           INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
-                           VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                           """
-                main_id = db.insert(sql_main, (ptt_id, title, type, img_url))
+                is_follow = int(self.base.contains_video_key(title))
+                main_id = db.insert_fa_ptt_main(ptt_id, title, type, img_url, is_follow)
 
                 if (self.is_test):
                     print(type)
@@ -203,7 +152,6 @@ class Crawler:
                     all_links = page.query_selector_all('#main-content a')
                     if (self.is_test):
                         print(all_links)
-                    send_links = []
 
                     for link in all_links:
                         href_value = link.get_attribute('href')
@@ -212,14 +160,7 @@ class Crawler:
                         if href_value.find('www.ptt.cc') >= 0:
                             print(f'{href_value} => 跳過\n')
                             continue
-                        sql_main = """
-                                   INSERT INTO `fa_ptt_images` (`main_id`, `image`, `createtime`, `updatetime`)
-                                   VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                                   """
-                        db.insert(sql_main, (main_id, href_value))
-                    if (self.is_test):
-                        print(send_links)
-                    self.base.send_media_group(chat_id, send_links)
+                        db.insert_fa_ptt_images(main_id, href_value)
 
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
@@ -227,7 +168,7 @@ class Crawler:
                     exit(1)
             browser.close()
 
-    def scrape_clickme(self, chat_id, type):
+    def scrape_clickme(self, type):
         if type == '18':
             url = "https://r18.clickme.net/c/new/1"
         else:
@@ -270,7 +211,7 @@ class Crawler:
                         print(f'已存在(base)\n')
                         continue
                     self.base.url.append(href_value)
-                    results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href_value))
+                    results = db.select_fa_ptt(href_value)
                     if len(results) < 1:
                         href_list.append({'title': title_text, 'href': href_value})
                     else:
@@ -285,11 +226,11 @@ class Crawler:
         for pair in href_list:
             print(href_value)
             if type == '18':
-                self.scrape_clickme_detail("clickme18", chat_id, pair['title'], pair['href'], type)
+                self.scrape_clickme_detail("clickme18", pair['title'], pair['href'], type)
             else:
-                self.scrape_clickme_detail("clickme", chat_id, pair['title'], pair['href'], type)
+                self.scrape_clickme_detail("clickme", pair['title'], pair['href'], type)
 
-    def scrape_clickme_detail(self, type, chat_id, title, url, is18):
+    def scrape_clickme_detail(self, type, title, url, is18):
         print(f"爬取頁面內容 => 標題: {title}\n連結: {url}")
 
         with sync_playwright() as pw1:
@@ -301,9 +242,7 @@ class Crawler:
             try:
                 ptt_id = 0
                 if (not self.is_test):
-                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-                    sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
-                    ptt_id = db.insert(sql)
+                    ptt_id = db.insert_fa_ptt(type, url, title)
                 url = "https:" + url
                 page.goto(url)
                 if is18 == '18':
@@ -317,15 +256,11 @@ class Crawler:
                         print(f"出現錯誤: {e}")
                     page.wait_for_load_state("load")
 
-                # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
                 page.screenshot(path="python_ptt.png")
                 img_url = self.base.upload_to_laptop_up("python_ptt.png")
                 print(img_url)
-                sql_main = """
-                           INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
-                           VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                           """
-                main_id = db.insert(sql_main, (ptt_id, title, type, img_url))
+                is_follow = int(self.base.contains_video_key(title))
+                main_id = db.insert_fa_ptt_main(ptt_id, title, type, img_url, is_follow)
 
                 send_links = []
                 article_element = page.locator("#article-detail-content")
@@ -333,99 +268,13 @@ class Crawler:
                 for image in images:
                     # 获取图像的 src 属性
                     image_src = "https:" + image.get_attribute('src')
-                    sql_main = """
-                               INSERT INTO `fa_ptt_images` (`main_id`, `image`, `createtime`, `updatetime`)
-                               VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                               """
-                    db.insert(sql_main, (main_id, image_src))
+                    db.insert_fa_ptt_images(main_id, image_src)
 
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
             browser.close()
 
-    def scrape_happy(self):
-
-        with sync_playwright() as pw:
-            # proxy = self.get_proxy()
-            browser = pw.chromium.launch(headless=False)
-            context = browser.new_context()
-            page = context.new_page()
-            for i in range(1, 21):
-
-                url = "https://m.happymh.com/apis/u/myBookcase"
-                url += "?token=BD4BBB0F-F826-4F83-A2FF-E28390EFA8BF"
-                url += "&p=" + str(i)
-                url += "&order_type=order_last_date"
-
-                # 前往目标页面
-                print(url)
-                page.goto(url)  # 替换成你要访问的网址
-
-                # 获取页面内容
-                page_content = page.content()
-
-                json_data_match = re.search(r'{"status":.*}', page_content)
-
-                if json_data_match:
-                    json_data = json_data_match.group()
-
-                    # 尝试解析JSON内容
-                    try:
-                        data = json.loads(json_data)
-                        if "data" in data and "list" in data["data"]:
-                            data_list = data["data"]["list"]
-                            if data_list:
-                                for item in data_list:
-                                    print("--------------------")
-                                    name = item["serie_name"]
-                                    read_name = item["read_chapter_name"]
-                                    last_name = item["last_chapter_name"]
-                                    href_value = "https://m.happymh.com/manga/" + item["serie_code"]
-                                    print([name, read_name, last_name, url])
-                                    results = db.select(
-                                        " SELECT id, name, new_episode FROM fa_comic WHERE `url` = '%s'" % (href_value))
-                                    if len(results) < 1:
-                                        print("不存在")
-                                        sql = "INSERT INTO `fa_comic` (`name`, `url`, `last_episode`, `new_episode`, `website`, `active`, `new`, `createtime`, `updatetime`) VALUES "
-                                        sql += "('%s', '%s', '%s', '%s', 'happy', 'Y', 'Y', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
-                                            name, href_value, read_name, last_name)
-                                        db.insert(sql)
-                                    else:
-                                        comic_id, existing_name, existing_new_episode = results[0]
-                                        print([comic_id, existing_name, existing_new_episode])
-                                        if last_name != existing_new_episode:  # 網站最新 != DB最新
-                                            new = "Y"
-                                            if read_name == last_name:  # 網站已讀 == 網站最新
-                                                new = "N"
-                                            sql = "UPDATE `fa_comic` SET `last_episode` = '" + read_name + "', `new_episode` = '" + last_name + "', `new` = '" + new + "', `updatetime` = UNIX_TIMESTAMP(NOW()) WHERE `id` = '" + str(
-                                                comic_id) + "'"
-                                            db.insert(sql)
-                                            print(f'已更新 (ID: {comic_id})')
-                                        else:  # 網站最新 = DB 最新
-                                            if read_name != existing_name:  # 網站已讀 != DB 已讀
-                                                new = "Y"
-                                                if read_name == last_name:  # 網站已讀 == 網站最新
-                                                    new = "N"
-                                                sql = "UPDATE `fa_comic` SET `last_episode` = '" + read_name + "', `new_episode` = '" + last_name + "', `new` = '" + new + "', `updatetime` = UNIX_TIMESTAMP(NOW()) WHERE `id` = '" + str(
-                                                    comic_id) + "'"
-                                                db.insert(sql)
-                                            print(f'已存在 (ID: {comic_id})')
-                                    print("-------------------- end ")
-                            else:
-                                print("列表中没有数据")
-                                break
-                        else:
-                            print("数据中不存在list或data")
-                            break
-                    except json.JSONDecodeError:
-                        print("无法解析JSON内容")
-                        break
-                else:
-                    print("未找到JSON数据")
-                    break
-            browser.close()
-
-    def scrape_51(self, chat_id):
+    def scrape_51(self):
         base_url = 'https://www.51cg1.com'
         href_list = []
         with sync_playwright() as pw:
@@ -460,7 +309,7 @@ class Crawler:
                         print(f'已存在(base)\n')
                         continue
                     self.base.url.append(href_value)
-                    results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href_value))
+                    results = db.select_fa_ptt(href_value)
                     if len(results) < 1:
                         href_list.append({'title': title_text, 'href': href_value})
                     else:
@@ -474,106 +323,9 @@ class Crawler:
         print("開始列表" + str(len(href_list)))
         for pair in href_list:
             print(href_value)
-            self.scrape_51_detail("51", chat_id, pair['title'], pair['href'])
+            self.scrape_51_detail("51", pair['title'], pair['href'])
 
-    def currency_240607(self, chat_id):
-
-        now = datetime.now()
-        formatted_date_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        msg_sendTG = "<pre>pre-formatted fixed-width code block</pre>"
-
-        url = "https://www.okx.com/v3/c2c/otc-ticker/quotedPrice"
-        params = {
-            "side": "buy",
-            "quoteCurrency": "TWD",
-            "baseCurrency": "USDT"
-        }
-        response = self.base.api_get(url, params)
-        money_usdt_to_twd = response['data'][0]['price']
-        # print("USDT to TWD:", money_usdt_to_twd)
-        # msg_sendTG = msg_sendTG + "<p>USDT轉台幣匯率為: "+money_usdt_to_twd+"</p>"
-        msg_sendTG = '<blockquote><b>USDT轉台幣匯率為</b>: ' + money_usdt_to_twd + '</blockquote>'
-
-        total_profit_USDT = 0
-        total_profit_TWD = 0
-        results = db.select(" SELECT name, quantity, cost FROM fa_currency WHERE 1 ")
-        for row in results:
-            name, quantity, cost = row
-            # https://min-api.cryptocompare.com/data/price?fsym='+name+'&tsyms=USDT
-            url = "https://min-api.cryptocompare.com/data/price"
-            params = {
-                "fsym": name,
-                "tsyms": "USDT",
-            }
-            response = self.base.api_get(url, params)
-            USDT = response['USDT']
-            msg_sendTG += '<blockquote>'
-            msg_sendTG += '<b>幣種</b>: ' + name + '\n'
-            msg_sendTG += '<b>數量</b>: ' + quantity + '\n'
-            msg_sendTG += '<b>成本</b>: ' + cost + '\n'
-            msg_sendTG += '<b>時價</b>: ' + str(USDT) + '\n'
-            profit_USDT = round((float(USDT) - float(cost)) * float(quantity), 2)
-            total_profit_USDT += profit_USDT
-            profit_TWD = round(profit_USDT * float(money_usdt_to_twd), 2)
-            total_profit_TWD += profit_TWD
-            msg_sendTG += '<b>盈虧(USDT)</b>: ' + str(profit_USDT) + '\n'
-            msg_sendTG += '<b>盈虧(TWD)</b>: ' + str(profit_TWD) + '\n'
-            msg_sendTG += '</blockquote>'
-
-        msg_sendTG += '<blockquote>'
-        msg_sendTG += '<b>總盈虧(USDT)</b>: ' + str(total_profit_USDT) + '\n'
-        msg_sendTG += '<b>總盈虧(TWD)</b>: ' + str(total_profit_TWD) + '\n'
-        msg_sendTG += '</blockquote>'
-
-        self.base.sendTG(chat_id, msg_sendTG)
-
-    def currency(self, chat_id):
-        url = "https://api.coinbase.com/v2/exchange-rates?currency=USDT"
-        params = {}
-        response = self.base.api_get(url, params)
-        money_usdt_to_twd = response['data']['rates']['TWD']
-        msg_sendTG = '<blockquote><b>USDT轉台幣匯率為</b>: ' + money_usdt_to_twd + '</blockquote>'
-
-        total_profit_USDT = 0
-        total_profit_TWD = 0
-        results = db.select(" SELECT name, quantity, cost FROM fa_currency WHERE 1 ")
-        for row in results:
-            name, quantity, cost = row
-            url = "https://api.coinbase.com/v2/exchange-rates?currency=" + str(name)
-            params = {}
-            response = self.base.api_get(url, params)
-            money_to_USDT = response['data']['rates']['USD']
-            msg_sendTG += '<blockquote>'
-            msg_sendTG += '<b>幣種</b>: ' + name + '\n'
-            msg_sendTG += '<b>數量</b>: ' + quantity + '\n'
-            msg_sendTG += '<b>成本</b>: ' + cost + '\n'
-            msg_sendTG += '<b>時價</b>: ' + str(money_to_USDT) + '\n'
-            profit_USDT = round((float(money_to_USDT) - float(cost)) * float(quantity), 2)
-            total_profit_USDT += profit_USDT
-            profit_TWD = round(profit_USDT * float(money_usdt_to_twd), 2)
-            total_profit_TWD += profit_TWD
-            msg_sendTG += '<b>盈虧(USDT)</b>: ' + str(profit_USDT) + '\n'
-            msg_sendTG += '<b>盈虧(TWD)</b>: ' + str(profit_TWD) + '\n'
-            msg_sendTG += '</blockquote>'
-
-        msg_sendTG += '<blockquote>'
-        msg_sendTG += '<b>總盈虧(USDT)</b>: ' + str(total_profit_USDT) + '\n'
-        msg_sendTG += '<b>總盈虧(TWD)</b>: ' + str(total_profit_TWD) + '\n'
-        msg_sendTG += '</blockquote>'
-
-        self.base.sendTG(chat_id, msg_sendTG)
-
-    def pttLogin(self, chat_id):
-
-        for pt in self._config['ptt_account']:
-            ID = pt['account']
-            Password = str(pt['password'])
-            print(ID)
-            PTTBot = PTT.Library()
-            PTTBot.login(ID, Password)
-            PTTBot.logout()
-
-    def scrape_51_detail(self, type, chat_id, title, url):
+    def scrape_51_detail(self, type, title, url):
         print(f"爬取頁面內容 => 標題: {title}\n連結: {url}")
 
         with sync_playwright() as pw1:
@@ -585,27 +337,22 @@ class Crawler:
             try:
                 ptt_id = 0
                 if (not self.is_test):
-                    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-                    sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
-                    ptt_id = db.insert(sql)
+                    ptt_id = db.insert_fa_ptt(type, url, title)
                 page.goto(url)
                 time.sleep(3)
                 try:
                     page.locator("#wanrningconfirm").click()
                 except Exception as e:
                     print(f"出現錯誤: {e}")
-                # self.base.sendTG(self.chat_id_image, '<a href="' + url + '">' + title + '</a>')
+
                 page.screenshot(path="python_ptt.png")
                 img_url = self.base.upload_to_laptop_up("python_ptt.png")
                 if (not img_url):
                     return
-                sql_main = """
-                           INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
-                           VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                           """
-                main_id = db.insert(sql_main, (ptt_id, title, type, img_url))
-                no_send_links = []
-                send_links = []
+
+                is_follow = int(self.base.contains_video_key(title))
+                main_id = db.insert_fa_ptt_main(ptt_id, title, type, img_url, is_follow)
+
                 archive = page.wait_for_selector(".post-content")
                 images = archive.query_selector_all("img")
 
@@ -632,202 +379,23 @@ class Crawler:
                         img_url = self.base.upload_to_laptop_up(local_path)
                         if not img_url:
                             continue
-                        sql_main = """
-                                   INSERT INTO `fa_ptt_images` (`main_id`, `image`, `createtime`, `updatetime`)
-                                   VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                                   """
-                        db.insert(sql_main, (main_id, img_url))
-                self.base.send_media_group(chat_id, send_links)
+                        db.insert_fa_ptt_images(main_id, img_url)
 
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
             browser.close()
 
-    def scrape_ig_back(self, chat_id):
-        instagram_usernames = {
-            "my._.chuuu": "李珠珢",
-        }
-        # 李珠珢 my._.chuuu
-        L = instaloader.Instaloader()
-        L.download_pictures = True
-        L.download_videos = True
-        L.download_comments = False  # 禁用評論下載
-        L.download_video_thumbnails = False  # 禁用視頻縮略圖下載
-        for instagram_username, name in instagram_usernames.items():
-            try:
-                # send_links = []
-                print(f"爬取頁面內容 => 帳號: {name} - {instagram_username}")
-                L.download_profile(instagram_username, profile_pic_only=False)
-                time.sleep(5)
-                content_dir = os.path.join(os.getcwd(), instagram_username)
-                for root, dirs, files in os.walk(content_dir):
-                    for file in files:
-                        ig_url = f"https://instagram.com/{instagram_username}/"
-                        file_name = instagram_username
-                        file_extension = os.path.splitext(file)[1]
-                        file_url = ig_url + file
+    def pttLogin(self):
 
-                        results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (file_url))
-                        if len(results) > 0:
-                            print(f'已存在({results})\n')
-                            continue
+        for pt in self._config['ptt_account']:
+            ID = pt['account']
+            Password = str(pt['password'])
+            print(ID)
+            PTTBot = PTT.Library()
+            PTTBot.login(ID, Password)
+            PTTBot.logout()
 
-                        if (not self.is_test):
-                            sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-                            sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
-                                "IG", file_url, file_name)
-                            db.insert(sql)
-                        file_path = os.path.join(root, file)
-                        print(f"副檔名:{file_extension}")
-                        if "mp4" in file_extension:
-                            print(f"檔案發送 - {file_path}")
-                            with open(file_path, 'rb') as file:
-                                # send_links.append(InputMediaPhoto(file))
-                                self.base.sendDocument(chat_id, file, file_url)
-                        if "jpg" in file_extension or "png" in file_extension:
-                            print(f"圖片發送 - {file_path}")
-                            with open(file_path, 'rb') as file:
-                                # send_links.append(InputMediaPhoto(file))
-                                self.base.send_photo(chat_id, file, file_url, True)
-                # if send_links:
-                #     self.base.sendTG(chat_id, f"IG => 帳號: {name} - {instagram_username}")
-                #     self.base.send_media_group(chat_id, send_links)
-            except Exception as e:
-                print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
-
-            # try:
-            #     # 確認資料夾存在
-            #     content_dir = os.path.join(os.getcwd(), instagram_username)
-            #     if os.path.exists(content_dir):
-            #         # 刪除資料夾及其所有內容
-            #         shutil.rmtree(content_dir)
-            #         print(f"資料夾 {content_dir} 已刪除。")
-            #     else:
-            #         print(f"資料夾 {content_dir} 不存在。")
-            # except Exception as e:
-            #     print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
-
-    def scrape_ig(self, type):
-        ig_list = [
-            "https://www.instagram.com/0724.32/",
-            "https://www.instagram.com/yyyoungggggg/",
-        ]
-
-        with sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=(not self.is_test))
-            context = browser.new_context()
-            page = context.new_page()
-            if not self.is_test:
-                page.set_viewport_size({"width": 1920, "height": 1080})
-
-            page.goto("https://snapinsta.to/zh-tw", timeout=60000)
-
-            for ig_url in ig_list:
-                print("處理:", ig_url)
-                # 填入 IG 連結並點下載
-                page.fill("#s_input", ig_url)
-                page.click('button:has-text("下載")')
-
-                # 等待 download 區出現
-                page.wait_for_selector(".download-box", timeout=20000)
-
-                # 嘗試關閉彈窗（若有）
-                try:
-                    page.click("#closeModalBtn", timeout=3000)
-                except:
-                    pass
-
-                # 由上而下逐張爬，遇 loader 則 PageDown 並 retry
-                collected = []
-                i = 0
-                # 若多次 page down 也沒新增就結束（避免無限迴圈）
-                page_down_attempts = 0
-                MAX_PAGE_DOWN_ATTEMPTS = 6
-
-                while True:
-                    imgs = page.query_selector_all(".download-box img")
-                    # 如果目前索引超過現有 img 長度，嘗試再滾動幾次載入更多
-                    if i >= len(imgs):
-                        if page_down_attempts >= 3:
-                            # 沒看到更多元素，結束
-                            break
-                        page.keyboard.press("PageDown")
-                        time.sleep(0.8)
-                        page_down_attempts += 1
-                        continue
-
-                    # scroll 到該 img，使其進入 viewport（以觸發 lazy load）
-                    img = imgs[i]
-                    page.evaluate("(el) => el.scrollIntoView({block: 'center'})", img)
-                    time.sleep(5)  # 等待 lazy load 啟動
-
-                    # 優先取 src，沒有再取 data-src
-                    src = img.get_attribute("src") or img.get_attribute("data-src") or ""
-                    src = src.strip() if src else ""
-
-                    # 如果是 loader（或還空的），代表要往下一頁觸發載入
-                    if "loader.gif" in src or src == "" or src.endswith("/imgs/loader.gif"):
-                        # page down 並等待新圖片產生
-                        page.keyboard.press("PageDown")
-                        time.sleep(5)
-                        # 增加 page down 嘗試計數，避免卡死
-                        page_down_attempts += 1
-                        if page_down_attempts > MAX_PAGE_DOWN_ATTEMPTS:
-                            # 若一直沒反應，當作已到底
-                            break
-                        # 不增加 i，重試同一 index（因為該位置可能剛剛是 loader）
-                        continue
-
-                    # 否則為有效圖片，加入結果並繼續下一張
-                    if src not in collected:
-                        md5_value = self.base.md5_hash(src)
-
-                        if md5_value in self.base.url:
-                            print(f'已存在(base)\n')
-                            continue
-                        self.base.url.append(md5_value)
-
-                        results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (md5_value))
-                        if len(results) > 0:
-                            print(f'已存在({results})\n')
-                            continue
-
-                        local_path = self.base.save_image_to_file(src, "python_ptt.png")
-                        if not local_path:
-                            continue
-                        # 上傳
-                        img_url = self.base.upload_to_laptop_up(local_path)
-                        if not img_url:
-                            continue
-
-                        sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-                        sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, md5_value,
-                                                                                                     ig_url)
-                        ptt_id = db.insert(sql)
-
-                        sql_main = """
-                                   INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
-                                   VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                                   """
-                        db.insert(sql_main, (ptt_id, ig_url, type, img_url))
-
-                        collected.append(src)
-
-                    i += 1
-                    # 有成功新增就把 page_down_attempts 重置
-                    page_down_attempts = 0
-
-                # 輸出該 IG 的所有圖片連結
-                print(f"已收集 {len(collected)} 張圖片：")
-                for s in collected:
-                    print(s)
-
-                # 小停頓，避免被當成機器人
-                time.sleep(10)
-
-            browser.close()
-
-    def avjoy(self, chat_id):
+    def avjoy(self):
         base_url = 'https://avjoy.me'
         href_list = []
         with sync_playwright() as pw:
@@ -862,7 +430,7 @@ class Crawler:
                             continue
                         self.base.url.append(href_value)
 
-                        db_results = db.select(" SELECT id, name FROM fa_ptt WHERE `url` = '%s'" % (href))
+                        db_results = db.select_fa_ptt(href_value)
                         if len(db_results) < 1:
                             results.append({
                                 "href": href,
@@ -881,7 +449,7 @@ class Crawler:
                     print(item)
                     url = item["href"]
                     title = item["title"]
-                    found = self.contains_video_key(title)
+                    found = self.base.contains_video_key(title)
                     if found:
                         browser = pw.chromium.launch(headless=(not self.is_test))
                         context = browser.new_context()
@@ -892,23 +460,17 @@ class Crawler:
                             ptt_id = 0
 
                             if (not self.is_test):
-                                sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-                                sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (
-                                    "avjoy", url, title)
-                                ptt_id = db.insert(sql)
+                                ptt_id = db.insert_fa_ptt("avjoy", url, title)
+
                             page.goto(base_url + url)
-                            # page.screenshot(path="python_ptt.png")
 
                             page.wait_for_selector('div.vjs-poster')
 
                             poster_element = page.query_selector('div.vjs-poster')
                             poster_element.screenshot(path="python_ptt.png")
                             img_url = self.base.upload_to_laptop_up("python_ptt.png")
-                            sql_main = """
-                                       INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `createtime`, `updatetime`)
-                                       VALUES (%s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
-                                       """
-                            db.insert(sql_main, (ptt_id, title, "avjoy", img_url))
+                            is_follow = int(self.base.contains_video_key(title))
+                            main_id = db.insert_fa_ptt_main(ptt_id, title, "avjoy", img_url, is_follow)
 
                         except Exception as e:
                             print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
@@ -929,25 +491,3 @@ class Crawler:
                     # self.base.send_photo(chat_id, item["img_src"], '<a href="' + item["href"] + '">' + item["img_title"] + '</a>', False)
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
-
-        # print("開始列表" + str(len(href_list)))
-        # for pair in href_list:
-        #     print(href_value)
-        #     self.scrape_51_detail("51", chat_id, pair['title'], pair['href'])
-
-    def contains_video_key(self, title):
-        found = False  # 初始化變數為 False
-        for key in self._config['video_key']:
-            if "," in key:
-                # 把 key 內的 "," 拆分成多個條件
-                sub_keys = key.split(",")
-                # 確保 title 必須包含所有拆分後的字串
-                if all(sub_key in title for sub_key in sub_keys):
-                    found = True
-                    break  # 找到符合條件的就跳出迴圈
-            else:
-                # 沒有 "," 則檢查 title 是否包含 key
-                if key in title:
-                    found = True
-                    break  # 找到符合條件的就跳出迴圈
-        return found

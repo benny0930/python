@@ -28,7 +28,7 @@ def check_and_create():
             yaml.dump({}, config_file, default_flow_style=False)
 
 
-def update_code():
+def update_code(config_path='config.yml'):
     try:
         print("Deleting all contents in images folder")
         delete_all_contents("./images")
@@ -40,8 +40,18 @@ def update_code():
             os.execv(sys.executable, [sys.executable] + sys.argv)
         else:
             print("No updates available.")
+            # 重新讀取 config.yml
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as config_file:
+                    new_config = yaml.safe_load(config_file) or {}
+                print("Config reloaded after update check.")
+                return new_config
+            else:
+                print("Config file not found after update.")
+                return None
     except subprocess.CalledProcessError as e:
         print("Failed to update code:", e)
+        return None
 
 
 def run_crawler_with_timeout(crawler, crawler_type, timeout=600):
@@ -84,7 +94,6 @@ def schedule_tasks(config, crawler):
         ]
     else:
         task_list = [
-            (1, update_code, None),
             (5, run_crawler_with_timeout, "PTT"),
             (5, run_crawler_with_timeout, "avjoy"),
             (60, run_crawler_with_timeout, "clickme"),
@@ -123,7 +132,6 @@ if __name__ == '__main__':
     print(config)
 
     crawler = Crawler(config)
-    crawler.setup()
 
     crawler_mapping = {
         "TEST": "TEST",
@@ -131,28 +139,40 @@ if __name__ == '__main__':
         "clickme": "clickme",
         "clickme18": "clickme18",
         "51": "51",
-        "happy": "happy",
         "pttLogin": "pttLogin",
-        "ig": "ig",
         "delete": "delete",
         "avjoy": "avjoy",
     }
 
+    # --- 如果指定了 type，直接執行該爬蟲 ---
     if config['type'] in crawler_mapping:
         run_crawler_with_timeout(crawler, crawler_mapping[config['type']])
+
     elif config['type'] == "detail":
         url = "https://www.51cg1.com/archives/179839/"
-        crawler.scrape_51_detail("Beauty", "-1001911277875", "test", url)
-    else:
-        update_code()
+        crawler.scrape_51_detail("Beauty", "test", url)
 
+    else:
+        new_config = update_code(args.config)
+
+        if new_config:
+            print("Config reloaded successfully after update.")
+            # 更新目前使用中的設定
+            config.update(new_config)
+            crawler = Crawler(config)  # 重新建立 crawler 物件，以使用新設定
+        else:
+            print("Config not reloaded or update failed, using old config.")
+
+        # --- 根據設定決定要執行的爬蟲類型 ---
         crawler_type_arr = ["delete", "pttLogin", "PTT", "clickme", "clickme18", "51", "avjoy"]
         if config['type'] == "ZH":
             crawler_type_arr = ["happy", "ig"]
 
+        # --- 逐一執行爬蟲 ---
         for crawler_type in crawler_type_arr:
             run_crawler_with_timeout(crawler, crawler_type)
 
+        # --- 設定排程任務 ---
         schedule_tasks(config, crawler)
 
         while True:

@@ -16,7 +16,6 @@ import mimetypes
 from io import BytesIO
 
 
-
 class Base:
     url = []
 
@@ -24,6 +23,17 @@ class Base:
         self._config: dict = config
         # https://api.telegram.org/bot5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM/getUpdates
         self.bot = telegram.Bot(token='5652787798:AAHiBgILVoZG-pL55Me7XBJwODWPm7ho1BM')
+
+    # proxy
+    def get_proxy1(self):
+        url = 'http://172.104.85.146'  # X1
+        port = 3128
+        return f'{url}:{port}'
+
+    def get_proxy2(self):
+        url = 'http://172.104.80.118'
+        port = 3128
+        return f'{url}:{port}'
 
     def send_media_group(self, _chat_id, _media=None):
         if _media is not None and len(_media) > 0:
@@ -369,3 +379,20 @@ class Base:
 
     def md5_hash(self, text: str) -> str:
         return hashlib.md5(text.encode("utf-8")).hexdigest()
+
+    def contains_video_key(self, title):
+        found = False  # 初始化變數為 False
+        for key in self._config['video_key']:
+            if "," in key:
+                # 把 key 內的 "," 拆分成多個條件
+                sub_keys = key.split(",")
+                # 確保 title 必須包含所有拆分後的字串
+                if all(sub_key in title for sub_key in sub_keys):
+                    found = True
+                    break  # 找到符合條件的就跳出迴圈
+            else:
+                # 沒有 "," 則檢查 title 是否包含 key
+                if key in title:
+                    found = True
+                    break  # 找到符合條件的就跳出迴圈
+        return found

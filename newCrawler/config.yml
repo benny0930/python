@@ -1,5 +1,5 @@
 sample: "test"
-version: "v1.0.24"
+version: "v2.0.0"
 ptt_account: [
   { account: kailovemoon, password: 111111 },
   { account: kiey, password: 111111 },
@@ -9,6 +9,8 @@ video_key: [
   "破解","破壞","破解","破坏",
   "うんぱい","unpai","Unpai","あんざいらら",
   "宇都宮紫苑","宇都宫紫苑","RION","宇都宮しをん","安齋拉拉","安斋拉拉","安齋らら",
-  "美園和花",
-  "瀬戶環奈","瀬戸環奈",“濑户环奈”,
+  "美園和花","みそのわか",
+  "瀬戶環奈","瀬戸環奈","濑户环奈",
+  "李珠珢","이주언","Lee Joo-eon","Yi Ju-eon",
+  "李雅英","이아영","Lee Ah-young","Yi A-young",
 ]
