@@ -1,5 +1,4 @@
 import pymysql
-import time
 
 # HOST = "192.168.56.56"
 HOST = "100.108.32.17"
@@ -8,93 +7,84 @@ PASSWORD = 'root'
 DATABASE = 'benny'
 
 
-def select(sql):
-    db = pymysql.connect(host=HOST, user=USER, password=PASSWORD, database=DATABASE)
-    results = 0
-    cursor = db.cursor()
+def get_connection():
+    """統一建立資料庫連線"""
+    return pymysql.connect(host=HOST, user=USER, password=PASSWORD, database=DATABASE, charset='utf8mb4')
+
+
+def select(sql, params=None):
+    """執行 SELECT，回傳查詢結果"""
     try:
-        cursor.execute(sql)
-        results = cursor.fetchall()
+        with get_connection() as db:
+            with db.cursor() as cursor:
+                cursor.execute(sql, params)
+                return cursor.fetchall()
     except Exception as e:
-        print("SQL Failed:", sql)
+        print("SELECT Failed:", sql)
+        print("Params:", params)
         print("Error:", e)
-    db.close()
-    return results
+        return []
 
 
-def insert(sql, params=None):
+def execute(sql, params=None, return_last_id=False):
+    """
+    執行 INSERT/UPDATE/DELETE
+    return_last_id: 若為 INSERT 可回傳最後插入ID
+    """
     try:
-        db = pymysql.connect(host=HOST, user=USER, password=PASSWORD, database=DATABASE)
-        cursor = db.cursor()
-        if params:
-            cursor.execute(sql, params)
-        else:
-            cursor.execute(sql)
-        db.commit()
-        return cursor.lastrowid  # 回傳最後插入的自動遞增ID
+        with get_connection() as db:
+            with db.cursor() as cursor:
+                cursor.execute(sql, params)
+                db.commit()
+                if return_last_id:
+                    return cursor.lastrowid
+                return cursor.rowcount  # 影響的行數
     except Exception as e:
         print("SQL Failed:", sql)
         print("Params:", params)
         print("Error:", e)
-        db.rollback()
+        if 'db' in locals():
+            db.rollback()
         return None
-    finally:
-        db.close()
-
-
-def delete(sql):
-    db = pymysql.connect(host=HOST, user=USER,
-                         password=PASSWORD, database=DATABASE)
-    cursor = db.cursor()
-    try:
-        cursor.execute(sql)
-        db.commit()
-        affected_rows = cursor.rowcount
-        results = {"deleted": affected_rows}
-    except Exception as e:
-        db.rollback()  # 若出錯，回滾
-        print(f"Error: {e}")
-        results = {"error": str(e)}
-    finally:
-        db.close()
-    return results
 
 
 def handle_delete(two_days_ago):
-    print("刪除 createtime < " + str(two_days_ago))
-    sql = "DELETE FROM fa_ptt_images WHERE createtime < " + str(two_days_ago)
-    results = delete(sql)
-    print(results)
-    sql = "DELETE FROM fa_ptt_main WHERE createtime < " + str(two_days_ago)
-    results = delete(sql)
-    print(results)
-    sql = "DELETE FROM fa_ptt WHERE createtime < " + str(two_days_ago)
-    results = delete(sql)
-    print(results)
+    print("刪除 createtime <", two_days_ago)
+
+    sql_list = [
+        "DELETE FROM fa_ptt_images WHERE createtime < %s",
+        "DELETE FROM fa_ptt_main WHERE createtime < %s",
+        "DELETE FROM fa_ptt WHERE createtime < %s",
+    ]
+    for sql in sql_list:
+        results = execute(sql, (two_days_ago,))
+        print(results)
 
 
 def select_fa_ptt(href_value):
-    return select(" SELECT id, name FROM fa_ptt WHERE `url` = '" + href_value + "'")
+    sql = "SELECT id, name FROM fa_ptt WHERE `url` = %s"
+    return select(sql, (href_value,))
 
 
-def insert_fa_ptt(type, url, title):
-    sql = "INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`) VALUES "
-    sql += "('%s', '%s', '%s', UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))" % (type, url, title)
-    return insert(sql)
+def insert_fa_ptt(type_, url, title):
+    sql = """
+          INSERT INTO `fa_ptt` (`name`, `url`, `title`, `createtime`, `updatetime`)
+          VALUES (%s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
+          """
+    return execute(sql, (type_, url, title), return_last_id=True)
 
 
-def insert_fa_ptt_main(ptt_id, title, type, img_url, is_follow):
+def insert_fa_ptt_main(ptt_id, title, type_, img_url, is_follow):
     sql_main = """
-               INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `is_follow`, `createtime`,
-                                          `updatetime`)
+               INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `is_follow`, `createtime`, `updatetime`)
                VALUES (%s, %s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
                """
-    return insert(sql_main, (ptt_id, title, type, img_url, is_follow))
+    return execute(sql_main, (ptt_id, title, type_, img_url, is_follow))
 
 
 def insert_fa_ptt_images(main_id, href_value):
-    results = select("SELECT id FROM fa_ptt_images WHERE image = '" + href_value + "'")
-    if len(results) > 0:
+    results = select("SELECT id FROM fa_ptt_images WHERE image = %s", (href_value,))
+    if results:
         print(f'已存在({results})\n')
         return False
 
@@ -102,5 +92,5 @@ def insert_fa_ptt_images(main_id, href_value):
                INSERT INTO fa_ptt_images (main_id, image, createtime, updatetime)
                VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
                """
-    insert(sql_main, (main_id, href_value))
+    execute(sql_main, (main_id, href_value))
     return True

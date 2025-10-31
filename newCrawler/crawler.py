@@ -1,8 +1,6 @@
 # coding: utf-8
 import inspect
 import db
-import json
-import re
 import time
 
 from base import Base
@@ -411,9 +409,6 @@ class Crawler:
                 # 選取所有的 content-row
                 rows = page.query_selector_all("div.content-left div.row.content-row div")
                 print(f"找到 {len(rows)} 筆資料")
-                # page.screenshot(path="python_ptt.png")
-                # with open("python_ptt.png", 'rb') as photo_file:
-                #     self.base.send_photo(chat_id, photo_file, '<a href="' + "222" + '">' + "111" + '</a>', True)
                 for row in rows:
                     link = row.query_selector("a")
                     img = row.query_selector("a img")
@@ -478,16 +473,5 @@ class Crawler:
                     else:
                         print(f"Item {item} is not in the video_key array.")
 
-                    # # 原始圖片 URL
-                    # image_url = item["img_src"]
-                    #
-                    # # 解析圖片 URL，將 .jpg 改為 .webm
-                    # video_url = image_url.rsplit('/', 1)[0] + "/video.webm"  # 去掉圖片的文件名並加上 video.webm
-                    #
-                    # print(f"視頻 URL: {video_url}")
-                    # self.base.sendDocument(chat_id, video_url, "")
-                    # return
-                    #
-                    # self.base.send_photo(chat_id, item["img_src"], '<a href="' + item["href"] + '">' + item["img_title"] + '</a>', False)
             except Exception as e:
                 print(f"An error occurred on line {inspect.currentframe().f_lineno}: {e}")
