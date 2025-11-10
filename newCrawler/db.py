@@ -79,7 +79,7 @@ def insert_fa_ptt_main(ptt_id, title, type_, img_url, is_follow):
                INSERT INTO `fa_ptt_main` (`ptt_id`, `title`, `type`, `cover`, `is_follow`, `createtime`, `updatetime`)
                VALUES (%s, %s, %s, %s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
                """
-    return execute(sql_main, (ptt_id, title, type_, img_url, is_follow))
+    return execute(sql_main, (ptt_id, title, type_, img_url, is_follow), return_last_id=True)
 
 
 def insert_fa_ptt_images(main_id, href_value):
@@ -92,5 +92,5 @@ def insert_fa_ptt_images(main_id, href_value):
                INSERT INTO fa_ptt_images (main_id, image, createtime, updatetime)
                VALUES (%s, %s, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW())) \
                """
-    execute(sql_main, (main_id, href_value))
+    execute(sql_main, (main_id, href_value), return_last_id=True)
     return True
